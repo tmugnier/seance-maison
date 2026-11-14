@@ -35,7 +35,8 @@
 body { margin: 0; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
-html { touch-action: manipulation; -webkit-text-size-adjust: 100%; } /* pas de zoom au double-tap */
+html, body { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; } /* défilement oui, zoom non */
+button { touch-action: manipulation; }
 body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; -webkit-tap-highlight-color: transparent; }
 main {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -647,7 +648,13 @@ document.addEventListener("click", e => {
 
 // Pas de zoom à deux doigts (iPhone)
 ["gesturestart", "gesturechange", "gestureend"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
-document.addEventListener("touchmove", e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+["touchstart", "touchmove"].forEach(ev => document.addEventListener(ev, e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false }));
+let dernierTap = 0; // pas de zoom au double-tap
+document.addEventListener("touchend", e => {
+  const t = Date.now();
+  if (t - dernierTap < 350 && !e.target.closest("button")) e.preventDefault();
+  dernierTap = t;
+}, { passive: false });
 
 renderTout();
 connecterCloud();

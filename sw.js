@@ -1,5 +1,5 @@
 /* Service worker : l'appli s'ouvre même hors ligne. Jamais de cache pour Supabase. */
-const CACHE = "seance-v1";
+const CACHE = "seance-v2";
 const FICHIERS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -22,7 +22,7 @@ self.addEventListener("fetch", e => {
   // Page : réseau d'abord, cache en secours
   if (req.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html")) {
     e.respondWith(
-      fetch(req).then(r => {
+      fetch(req, { cache: "no-store" }).then(r => { // toujours la dernière version, sans cache navigateur
         if (r.ok) { const copie = r.clone(); caches.open(CACHE).then(c => c.put("index.html", copie)); }
         return r;
       }).catch(() => caches.match("index.html").then(r => r || caches.match("./")))
