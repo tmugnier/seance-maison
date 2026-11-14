@@ -503,11 +503,9 @@ function wavMuet() {
   return "data:audio/wav;base64," + btoa(bin);
 }
 function debloquerSon() {
-  try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
-  try {
-    if (!muet) { muet = new Audio(wavMuet()); muet.loop = true; muet.setAttribute("playsinline", ""); }
-    muet.play().catch(() => {});
-  } catch (e) {}
+  // "ambient" : les bips se mélangent à la musique (YouTube Music, Spotify…) sans la couper.
+  // Contrepartie : en mode silencieux, l'iPhone coupe les bips.
+  try { if (navigator.audioSession) navigator.audioSession.type = "ambient"; } catch (e) {}
   try {
     audio = audio || new (window.AudioContext || window.webkitAudioContext)();
     audio.resume();
