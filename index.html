@@ -135,7 +135,11 @@ nav button[aria-selected="true"] { color: var(--accent); }
 #timer[data-phase="rest"] { background: var(--rest-soft); }
 .t-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 .t-top { flex-wrap: wrap; }
-.t-opts { display: flex; gap: 6px; }
+.t-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.t-son { margin-top: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 10px; }
+.t-son label { display: grid; grid-template-columns: 7.5em 1fr 3em; align-items: center; gap: 10px; font-weight: 600; font-size: .95rem; }
+.t-son input[type="range"] { width: 100%; min-width: 0; accent-color: var(--accent); touch-action: none; }
+.t-son output { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 .t-music { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: .85rem; }
 .t-music[aria-pressed="false"] { color: var(--muted); }
 .t-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; min-height: 0; }
@@ -186,8 +190,13 @@ nav button[aria-selected="true"] { color: var(--accent); }
 
 <div id="timer" hidden data-phase="prep">
   <div class="t-top"><span id="t-seance">Pecs</span>
-    <span class="t-opts"><button id="t-voice" class="t-music" aria-pressed="true">🗣️ On</button><button id="t-music" class="t-music" aria-pressed="true">🎵 On</button></span>
+    <span class="t-opts"><button id="t-vol" class="t-music" aria-expanded="false" aria-controls="t-son">🔊 Volume</button><button id="t-voice" class="t-music" aria-pressed="true">🗣️ On</button><button id="t-music" class="t-music" aria-pressed="true">🎵 On</button></span>
     <span id="t-round">Tour 1/2</span></div>
+  <div class="t-son" id="t-son" hidden>
+    <label for="vol-bips">🔔 Bips <input type="range" id="vol-bips" min="0" max="100" step="5"><output id="out-bips"></output></label>
+    <label for="vol-voix">🗣️ Voix <input type="range" id="vol-voix" min="0" max="100" step="5"><output id="out-voix"></output></label>
+    <label for="vol-musique">🎵 Musique <input type="range" id="vol-musique" min="0" max="100" step="5"><output id="out-musique"></output></label>
+  </div>
   <div class="t-mid">
     <span class="t-phase" id="t-phase">PRÉPARE-TOI</span>
     <p class="t-name" id="t-name">Pompes classiques</p>
@@ -485,6 +494,10 @@ function renderTout() { renderAujourdhui(); renderSemaine(); renderActivites(); 
 
 /* ---------- Son ---------- */
 let audio = null;
+// Volumes réglables (0 à 1), gardés sur le téléphone
+let vols = { bips: 1, voix: 1, musique: 0.5 };
+try { Object.assign(vols, JSON.parse(localStorage.getItem("volumes") || "{}")); } catch (e) {}
+function sauverVols() { try { localStorage.setItem("volumes", JSON.stringify(vols)); } catch (e) {} }
 function bip(freq = 880, dur = 0.15, vol = 0.35) {
   try {
     audio = audio || new (window.AudioContext || window.webkitAudioContext)();
@@ -494,7 +507,8 @@ function bip(freq = 880, dur = 0.15, vol = 0.35) {
       const comp = audio.createDynamicsCompressor();
       comp.threshold.value = -35; comp.knee.value = 0; comp.ratio.value = 20; comp.attack.value = 0.001; comp.release.value = 0.05;
       const boost = audio.createGain(); boost.gain.value = 5;
-      comp.connect(boost).connect(audio.destination);
+      const vb = audio.createGain(); vb.gain.value = vols.bips; audio._volBips = vb;
+      comp.connect(boost).connect(vb).connect(audio.destination);
       audio._sortie = comp;
     }
     const t = audio.currentTime, g = audio.createGain(), niveau = Math.min(1, vol * 2.2);
@@ -543,7 +557,7 @@ const ambiance = (() => {
   const actif = () => on;
   function prep() {
     audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-    if (!master) { master = audio.createGain(); master.gain.value = 0.12; master.connect(audio.destination); }
+    if (!master) { master = audio.createGain(); master.gain.value = 0.24 * vols.musique; master.connect(audio.destination); }
   }
   function kick(t) {
     const o = audio.createOscillator(), g = audio.createGain();
@@ -602,7 +616,8 @@ const ambiance = (() => {
     if (!v) stop();
     return v;
   }
-  return { jouer, stop, actif, basculer };
+  function regler() { if (master) master.gain.value = 0.24 * vols.musique; }
+  return { jouer, stop, actif, basculer, regler };
 })();
 /* ---------- Voix : annonce l'exercice, la récup, la fin ---------- */
 let voixOn = true; try { voixOn = localStorage.getItem("voix") !== "off"; } catch (e) {}
@@ -621,7 +636,7 @@ function dire(txt, delai = 0) {
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(txt);
-      u.lang = "fr-FR"; if (voixFr) u.voice = voixFr; u.rate = 1.05; u.volume = 1;
+      u.lang = "fr-FR"; if (voixFr) u.voice = voixFr; u.rate = 1.05; u.volume = vols.voix;
       speechSynthesis.speak(u);
     } catch (e) {}
   }, delai);
@@ -753,6 +768,24 @@ T("t-voice").onclick = () => {
   majBoutonVoix();
 };
 majBoutonVoix();
+// Réglages de volume
+T("t-vol").onclick = () => {
+  const p = T("t-son"); p.hidden = !p.hidden;
+  T("t-vol").setAttribute("aria-expanded", !p.hidden);
+};
+["bips", "voix", "musique"].forEach(k => {
+  const r = T("vol-" + k), o = T("out-" + k);
+  r.value = Math.round(vols[k] * 100); o.textContent = r.value + " %";
+  r.addEventListener("input", () => {
+    vols[k] = r.value / 100; o.textContent = r.value + " %"; sauverVols();
+    if (k === "bips" && audio && audio._volBips) audio._volBips.gain.value = vols.bips;
+    if (k === "musique") ambiance.regler();
+  });
+  r.addEventListener("change", () => { // petit test pour entendre le niveau
+    if (k === "bips") bip(2093, 0.18, 0.5);
+    if (k === "voix") dire("Test de la voix");
+  });
+});
 document.addEventListener("visibilitychange", () => { if (run && !document.hidden) { garderEcran(); try { audio && audio.resume(); } catch (e) {} } });
 T("timer").addEventListener("pointerdown", () => { try { audio && audio.state !== "running" && audio.resume(); } catch (e) {} });
 

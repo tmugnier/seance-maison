@@ -1,5 +1,5 @@
 /* Service worker : l'appli s'ouvre même hors ligne. Jamais de cache pour Supabase. */
-const CACHE = "seance-v8";
+const CACHE = "seance-v9";
 const FICHIERS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
