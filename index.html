@@ -134,6 +134,8 @@ nav button[aria-selected="true"] { color: var(--accent); }
 #timer[data-phase="effort"] { background: var(--accent-soft); }
 #timer[data-phase="rest"] { background: var(--rest-soft); }
 .t-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.t-top { flex-wrap: wrap; }
+.t-opts { display: flex; gap: 6px; }
 .t-music { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: .85rem; }
 .t-music[aria-pressed="false"] { color: var(--muted); }
 .t-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; min-height: 0; }
@@ -183,7 +185,9 @@ nav button[aria-selected="true"] { color: var(--accent); }
 <div id="toast" class="toast" role="status" hidden></div>
 
 <div id="timer" hidden data-phase="prep">
-  <div class="t-top"><span id="t-seance">Pecs</span><button id="t-music" class="t-music" aria-pressed="true">🎵 On</button><span id="t-round">Tour 1/2</span></div>
+  <div class="t-top"><span id="t-seance">Pecs</span>
+    <span class="t-opts"><button id="t-voice" class="t-music" aria-pressed="true">🗣️ On</button><button id="t-music" class="t-music" aria-pressed="true">🎵 On</button></span>
+    <span id="t-round">Tour 1/2</span></div>
   <div class="t-mid">
     <span class="t-phase" id="t-phase">PRÉPARE-TOI</span>
     <p class="t-name" id="t-name">Pompes classiques</p>
@@ -600,6 +604,31 @@ const ambiance = (() => {
   }
   return { jouer, stop, actif, basculer };
 })();
+/* ---------- Voix : annonce l'exercice, la récup, la fin ---------- */
+let voixOn = true; try { voixOn = localStorage.getItem("voix") !== "off"; } catch (e) {}
+let voixFr = null, voixTimer = null;
+function choisirVoix() {
+  try { const v = speechSynthesis.getVoices(); voixFr = v.find(x => /^fr[-_]FR/i.test(x.lang)) || v.find(x => /^fr/i.test(x.lang)) || null; } catch (e) {}
+}
+if ("speechSynthesis" in window) { choisirVoix(); speechSynthesis.onvoiceschanged = choisirVoix; }
+function debloquerVoix() { // doit être appelé pendant un appui (iPhone)
+  try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+}
+function dire(txt, delai = 0) {
+  clearTimeout(voixTimer);
+  if (!voixOn || !("speechSynthesis" in window)) return;
+  voixTimer = setTimeout(() => {
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(txt);
+      u.lang = "fr-FR"; if (voixFr) u.voice = voixFr; u.rate = 1.05; u.volume = 1;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }, delai);
+}
+function taire() { clearTimeout(voixTimer); try { speechSynthesis.cancel(); } catch (e) {} }
+function majBoutonVoix() { const b = document.getElementById("t-voice"); if (b) { b.textContent = voixOn ? "🗣️ On" : "🗣️ Off"; b.setAttribute("aria-pressed", voixOn); } }
+
 function majBoutonMusique() { const b = document.getElementById("t-music"); if (b) { b.textContent = ambiance.actif() ? "🎵 On" : "🎵 Off"; b.setAttribute("aria-pressed", ambiance.actif()); } }
 
 /* ---------- Timer ---------- */
@@ -617,7 +646,7 @@ function etapes(a) {
 async function garderEcran() { try { wake = await navigator.wakeLock?.request("screen"); } catch (e) { wake = null; } }
 function lancer(id) {
   const a = act(id); if (!a || a.type !== "circuit") return;
-  debloquerSon();
+  debloquerSon(); debloquerVoix();
   run = { s: a, steps: etapes(a), i: 0, end: 0, left: 0, paused: false, debut: Date.now(), lastSec: null };
   T("timer").hidden = false; T("t-confirm").hidden = true; T("t-btns").hidden = false;
   garderEcran(); demarrerEtape();
@@ -643,6 +672,11 @@ function demarrerEtape() {
     T("t-next").textContent = s.echauffement || "Cercles de bras, rotations d'épaules, quelques pompes faciles.";
   }
   // Effort : double bip aigu · Récup : bip grave long
+  // Voix (après les bips pour ne pas se chevaucher)
+  if (st.phase === "warm") dire("Échauffement");
+  else if (st.phase === "prep") dire("Prêt ? C'est parti.");
+  else if (st.phase === "effort") dire(s.exos[st.ex][0], 750);
+  else if (st.phase === "rest") { const nx = run.steps[nextIdx]; dire("Récupération." + (nx ? " Ensuite : " + s.exos[nx.ex][0] + "." : ""), 1150); }
   // Fréquences autour de 2 kHz : là où l'oreille et le haut-parleur de l'iPhone sont les plus efficaces
   if (st.phase === "effort") [0, 220, 440].forEach(d => setTimeout(() => bip(2093, 0.18, 0.5), d));
   else if (st.phase === "rest") { bip(1319, 0.45, 0.5); setTimeout(() => bip(1047, 0.6, 0.5), 480); }
@@ -668,7 +702,7 @@ function suivant() {
 }
 function finir() {
   const s = run.s, duree = Math.round((Date.now() - run.debut) / 1000);
-  decalage = 0; ajouter(s.id, 1); ambiance.stop();
+  decalage = 0; ajouter(s.id, 1); ambiance.stop(); dire("Séance terminée. Bravo !", 700);
   bip(1046, 0.2, 0.4); setTimeout(() => bip(1318, 0.4, 0.4), 220);
   T("timer").dataset.phase = "rest";
   T("t-phase").textContent = "TERMINÉ"; T("t-name").textContent = s.nom + " ✅";
@@ -681,7 +715,7 @@ function finir() {
 }
 function fermer() {
   if (run) cancelAnimationFrame(run.raf);
-  couperMuet(); ambiance.stop();
+  couperMuet(); ambiance.stop(); if (!(run && run.fini)) taire();
   run = null; T("timer").hidden = true; T("t-cancel").hidden = false; T("t-quit").textContent = "Quitter la séance";
   try { wake && wake.release(); } catch (e) {} wake = null;
 }
@@ -712,6 +746,13 @@ T("t-music").onclick = () => {
   if (run && !run.fini && ambiance.actif() && run.steps[run.i].phase === "effort") ambiance.jouer("effort");
 };
 majBoutonMusique();
+T("t-voice").onclick = () => {
+  voixOn = !voixOn;
+  try { localStorage.setItem("voix", voixOn ? "on" : "off"); } catch (e) {}
+  if (!voixOn) taire(); else debloquerVoix();
+  majBoutonVoix();
+};
+majBoutonVoix();
 document.addEventListener("visibilitychange", () => { if (run && !document.hidden) { garderEcran(); try { audio && audio.resume(); } catch (e) {} } });
 T("timer").addEventListener("pointerdown", () => { try { audio && audio.state !== "running" && audio.resume(); } catch (e) {} });
 
