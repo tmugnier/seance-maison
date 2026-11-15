@@ -627,7 +627,7 @@ function demarrerEtape() {
   run.end = performance.now() + st.sec * 1000; run.lastSec = null;
   const s = run.s, c = cfg(s), ex = s.exos[st.ex];
   T("timer").dataset.phase = st.phase;
-  ambiance.jouer(st.phase === "effort" ? "effort" : "chill");
+  if (st.phase === "effort") ambiance.jouer("effort"); else ambiance.stop(); // récup = silence
   T("t-seance").textContent = s.nom;
   T("t-round").textContent = "Tour " + st.tour + "/" + c.tours + " · Exo " + (st.ex + 1) + "/" + s.exos.length;
   T("t-phase").textContent = st.phase === "effort" ? "EFFORT" : st.phase === "rest" ? "RÉCUP" : st.phase === "warm" ? "ÉCHAUFFEMENT" : "PRÉPARE-TOI";
@@ -709,7 +709,7 @@ T("t-cancel").onclick = () => { T("t-confirm").hidden = true; T("t-btns").hidden
 T("t-quit").onclick = fermer;
 T("t-music").onclick = () => {
   ambiance.basculer(); majBoutonMusique();
-  if (run && !run.fini && ambiance.actif()) ambiance.jouer(run.steps[run.i].phase === "effort" ? "effort" : "chill");
+  if (run && !run.fini && ambiance.actif() && run.steps[run.i].phase === "effort") ambiance.jouer("effort");
 };
 majBoutonMusique();
 document.addEventListener("visibilitychange", () => { if (run && !document.hidden) { garderEcran(); try { audio && audio.resume(); } catch (e) {} } });
