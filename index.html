@@ -75,6 +75,18 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mini .meta { color: var(--muted); font-size: .85rem; }
 .mini button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .85rem; }
 
+/* Plan trail (Aujourd'hui + catégorie Trail) */
+.plan { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin: 0 0 16px; font-size: .95rem; }
+.plan-k { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--accent); }
+.plan h2 { font-size: 1.1rem; }
+.plan-s { color: var(--muted); font-size: .9rem; }
+.plan-l { margin-top: 2px; }
+.infos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+details.info { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; }
+details.info summary { padding: 12px 0; font-weight: 600; cursor: pointer; }
+details.info ul { margin: 0 0 12px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: .92rem; }
+details.info p { margin: 0 0 12px; font-size: .92rem; }
+
 /* Semaine */
 .progress { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
 .progress strong { font-family: var(--display); font-size: 1.6rem; }
@@ -84,6 +96,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .task .txt { flex: 1; min-width: 0; }
 .task .meta { color: var(--muted); font-size: 0.85rem; }
 .task.done h2 { text-decoration: line-through; color: var(--muted); }
+.task.off h2 { color: var(--muted); }
 .check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); background: none; flex: none; display: grid; place-items: center; padding: 0; color: var(--on-color); }
 .task.done .check { background: var(--rest); border-color: var(--rest); }
 .check svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
@@ -91,6 +104,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .play { border: 0; border-radius: 999px; background: var(--accent); color: var(--on-color); font-weight: 600; padding: 9px 16px; font-size: 0.9rem; flex: none; }
 .del { flex: none; border: 1px solid var(--line); background: none; color: var(--muted); border-radius: 999px; padding: 7px 12px; font-size: 0.85rem; font-weight: 600; }
 .del.sure { background: #D63A2F; border-color: #D63A2F; color: #FFFFFF; }
+.acts { flex: none; display: flex; flex-direction: column; align-items: stretch; gap: 6px; } /* Lancer / Fait au-dessus de « −1 » */
+.compteur { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* Activités */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -112,7 +127,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 ol.exos { list-style: none; margin: 0; padding: 0; counter-reset: ex; display: flex; flex-direction: column; gap: 8px; }
 ol.exos li { counter-increment: ex; display: flex; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 ol.exos li::before { content: counter(ex); font-family: var(--display); font-weight: 600; color: var(--accent); min-width: 1.2em; }
-ol.exos li div { min-width: 0; }
+ol.exos li div { min-width: 0; flex: 1; }
+.ex-photo { flex: none; align-self: flex-start; width: 72px; height: 48px; object-fit: cover; border-radius: 8px; background: #FFFFFF; border: 1px solid var(--line); }
 ol.exos p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
 .big { display: block; width: 100%; border: 0; border-radius: 16px; background: var(--accent); color: var(--on-color); font: 600 1.1rem var(--body); padding: 16px; margin-top: 20px; }
 
@@ -147,6 +163,8 @@ nav button[aria-selected="true"] { color: var(--accent); }
 #timer[data-phase="effort"] .t-phase { background: var(--accent); color: var(--on-color); }
 #timer[data-phase="rest"] .t-phase { background: var(--rest); color: var(--on-color); }
 .t-name { font-family: var(--display); font-weight: 800; font-size: clamp(1.8rem, 9vw, 3.2rem); line-height: 1.05; text-wrap: balance; margin: 8px 0 0; }
+.t-photo { flex: none; height: min(20vh, 170px); aspect-ratio: 3 / 2; max-width: 100%; object-fit: contain; border-radius: 14px; background: #FFFFFF; }
+@media (max-height: 560px) { .t-photo { display: none; } }
 .t-time { font-family: var(--display); font-weight: 800; font-size: clamp(4.5rem, 26vw, 10rem); line-height: 1; font-variant-numeric: tabular-nums; }
 .t-next { color: var(--muted); font-size: 1rem; }
 .t-next b { color: var(--fg); }
@@ -165,6 +183,7 @@ nav button[aria-selected="true"] { color: var(--accent); }
   <section data-tab="aujourdhui">
     <p class="note" id="save-note" hidden>Sauvegarde en ligne indisponible (pas de connexion ?)</p>
     <div class="chips" id="chips"></div>
+    <div id="plan"></div>
     <div class="label">Reste cette semaine</div>
     <div id="reste"></div>
   </section>
@@ -200,6 +219,7 @@ nav button[aria-selected="true"] { color: var(--accent); }
   <div class="t-mid">
     <span class="t-phase" id="t-phase">PRÉPARE-TOI</span>
     <p class="t-name" id="t-name">Pompes classiques</p>
+    <img class="t-photo" id="t-photo" alt="" loading="lazy" hidden>
     <div class="t-time" id="t-time">5</div>
     <div class="t-next" id="t-next"></div>
   </div>
@@ -222,10 +242,12 @@ nav button[aria-selected="true"] { color: var(--accent); }
    type "sortie"  : activité à cocher (info = ce qu'on fait)
    parSemaine     : combien de fois par semaine (1 par défaut)
    famille        : "pousser" / "tirer" / "autre" (sert à la suggestion du jour)
+   exo            : [nom, consigne, durée en s (facultatif), photo (facultatif, sinon table PHOTOS)]
    ===================================================================== */
 const CATEGORIES = [
   { id: "muscu", nom: "Musculation", icone: "💪", desc: "Séances avec timer" },
-  { id: "ext", nom: "Extérieur", icone: "🌳", desc: "Vélo, quad, course" },
+  { id: "ext", nom: "Extérieur", icone: "🌳", desc: "Vélo, course" },
+  { id: "trail", nom: "Trail", icone: "⛰️", desc: "Genou, renfo et sorties longues" },
   { id: "reeduc", nom: "Rééducation", icone: "🩹", desc: "Épaule gauche, à l'élastique" }
 ];
 
@@ -287,13 +309,45 @@ const ACTIVITES = [
   ]},
   { id: "velo", nom: "Vélo", cat: "ext", type: "sortie", materiel: "Vélo", info: "Sortie d'environ 5 km",
     desc: "Fais ta sortie (avec ton appli GPS si tu veux), puis coche-la ici." },
-  { id: "quad", nom: "Quad", cat: "ext", type: "sortie", materiel: "Quad", info: "Tour d'environ 15 km",
-    desc: "Fais ton tour, puis coche-le ici." },
   { id: "course", nom: "Course fractionnée", cat: "ext", type: "circuit", famille: "autre", materiel: "Chaussures de course",
     warm: 300, effort: 60, recup: 60, tours: 8, recupTxt: "Trotte doucement pour récupérer.",
     echauffement: "Footing très tranquille pendant 5 minutes, tu dois pouvoir parler facilement.", exos: [
     ["Course rapide", "Allure soutenue : tu peux dire quelques mots, pas tenir une conversation."]
   ]},
+  // Trail : les objectifs de la semaine (parSemaine) et les textes des sorties suivent PLAN_TRAIL, plus bas
+  { id: "renfo-genou", nom: "Renfo genou", cat: "trail", type: "circuit", famille: "autre", materiel: "Marche + élastique",
+    parSemaine: 3, effort: 40, recup: 15, tours: 3, warm: 90,
+    note: "Douleur jusqu'à 3/10 : ok. Au-delà : stop, ou fais l'exo en plus petite amplitude. Les 2 premières semaines, 2 tours suffisent. Va voir un kiné du sport si la douleur persiste malgré le programme, ou tout de suite si ton genou gonfle, se bloque ou lâche.",
+    echauffement: "Marche sur place ou monte et descends l'escalier tranquillement, puis 10 demi-squats lents sans poids.", exos: [
+    ["Pont fessier", "Sur le dos, pieds à plat : monte le bassin en serrant les fesses, tiens 2 s en haut, redescends lentement.", 40],
+    ["Step-down lent (gauche)", "Debout sur la marche sur la jambe gauche : descends le talon droit vers le sol en 3 s, puis remonte. Genou gauche aligné avec le 2e orteil, sans rentrer. Marche de 10-15 cm, 15-20 cm dès la semaine 6.", 30],
+    ["Step-down lent (droite)", "Même chose debout sur la jambe droite.", 30],
+    ["Marche latérale à l'élastique", "Élastique autour des chevilles, genoux un peu fléchis : fais des pas de côté sans coller les pieds, aller et retour.", 40],
+    ["Chaise au mur", "Dos au mur, descends vers 60° de flexion, pas besoin d'aller à 90°, et tiens. Remonte un peu si le genou tire au-delà de 3/10.", 40],
+    ["Clamshell (côté droit)", "Couché sur le côté droit, genoux fléchis, élastique au-dessus des genoux : ouvre le genou gauche sans basculer le bassin.", 30],
+    ["Clamshell (côté gauche)", "Couché sur le côté gauche, tête sur un coussin et pas sur le bras gauche : ouvre le genou droit. Si l'épaule gêne, fais un pont fessier à la place.", 30],
+    ["Mollets à la marche", "Avant des pieds sur la marche, main droite au mur : monte sur les pointes, puis redescends le talon sous la marche en 3 s. Dès la semaine 6 : une jambe à la fois, en alternant.", 40]
+  ]},
+  { id: "renfo-trail", nom: "Renfo trail", cat: "trail", type: "circuit", famille: "autre", materiel: "Marche + haltères légers",
+    parSemaine: 2, effort: 40, recup: 15, tours: 3, warm: 180,
+    note: "Douleur jusqu'à 3/10 : ok. Au-delà : stop, et reprends « Renfo genou » quelques jours. Haltères toujours le long du corps, jamais au-dessus de la tête. Va voir un kiné du sport si la douleur persiste, ou tout de suite si ton genou gonfle, se bloque ou lâche.",
+    echauffement: "2 min de montées et descentes d'escalier à rythme léger, puis 10 fentes arrière sans poids et 10 montées sur pointes.", exos: [
+    ["Réceptions depuis la marche", "Depuis une marche basse, descends en petit saut et atterris sur les deux pieds sans bruit, genoux fléchis et alignés. Remonte en marchant. Si le step-down fait mal, saute cet exo.", 40],
+    ["Step-down haut (gauche)", "Sur la jambe gauche, marche haute (20-25 cm) : descends le talon droit vers le sol en 4 s, bassin bien horizontal, puis remonte.", 30],
+    ["Step-down haut (droite)", "Même chose sur la jambe droite.", 30],
+    ["Gainage latéral droit", "Sur l'avant-bras droit, coude sous l'épaule, corps droit de la tête aux pieds : ne laisse pas tomber les hanches.", 30],
+    ["Squat bulgare (gauche)", "Jambe gauche devant, pied droit posé derrière sur la marche ou une chaise : descends en 3 s jusqu'à frôler le sol avec le genou droit, puis remonte. Haltères légers le long du corps dès la semaine 11, si c'est facile.", 30],
+    ["Squat bulgare (droite)", "Même chose, jambe droite devant.", 30],
+    ["Gainage latéral gauche", "Sur l'avant-bras gauche, genoux fléchis posés au sol pour ménager l'épaule. Si l'épaule tire : couché sur le côté droit, lève la jambe gauche tendue.", 30],
+    ["Fentes arrière", "Recule une jambe et descends en 2-3 s, buste droit, genou avant au-dessus du pied, puis repousse. Alterne. Haltères légers le long du corps dès la semaine 11, si c'est facile.", 45],
+    ["Mollets sur une jambe (gauche)", "Avant du pied gauche sur la marche, main droite au mur : monte sur la pointe, puis redescends le talon sous la marche en 3 s.", 30],
+    ["Mollets sur une jambe (droite)", "Même chose sur le pied droit, toujours la main droite au mur.", 30]
+  ]},
+  // info / desc ci-dessous : textes utilisés une fois le plan terminé (pendant le plan : ceux de la semaine)
+  { id: "trail-footing", nom: "Footing", cat: "trail", type: "sortie", materiel: "Chaussures de course", info: "Footing tranquille",
+    desc: "Allure tranquille : tu dois pouvoir parler. Coche chaque footing." },
+  { id: "trail-sortie-longue", nom: "Sortie longue", cat: "trail", type: "sortie", materiel: "Chaussures de trail + bâtons", info: "Sortie longue à ton rythme, 12-20 km",
+    desc: "Pars lentement et marche dans les montées. Une plus longue de temps en temps, si le genou va bien." },
   // 3e élément d'un exo = sa durée propre en secondes (sinon : l'effort de la séance)
   { id: "reeduc-epaule", nom: "Rééducation épaule", cat: "reeduc", type: "circuit", famille: "autre", materiel: "Élastique",
     parSemaine: 3, effort: 45, recup: 20, tours: 3, warm: 60,
@@ -305,23 +359,233 @@ const ACTIVITES = [
     ["Appuis muraux", "De profil contre le mur, petit appui sur la main gauche, petits rebonds. Penche-toi un peu plus chaque semaine.", 30]
   ]}
 ];
+/* =====================================================================
+   PLAN TRAIL (26 semaines, du lundi au dimanche) — modifiable à la main.
+   debut : lundi de la semaine 1 (AAAA-MM-JJ). Une ligne = une semaine, dans l'ordre.
+   footing / fract / velo / renfoGenou / renfoTrail : objectif de la semaine (0 = pas au programme)
+   footingInfo / sortieLongue / veloInfo : textes affichés. La sortie longue vaut 1 par semaine.
+   apres : objectifs une fois le plan terminé, en entretien (les textes reviennent à ceux du catalogue).
+   ===================================================================== */
+const PLAN_TRAIL = {
+  debut: "2026-11-16",
+  semaines: [
+    { phase: "Phase 1 · Genou", footing: 1, footingInfo: "4 km sur du plat", fract: 0, sortieLongue: "5 km, sur du plat", velo: 1, veloInfo: "30 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Cours sur du plat, à une allure où tu peux parler. Note ton genou sur 10 après chaque sortie." },
+    { phase: "Phase 1 · Genou", footing: 1, footingInfo: "4 km sur du plat", fract: 0, sortieLongue: "5,5 km, sur du plat", velo: 1, veloInfo: "35 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Toujours du plat et tranquille. Le renfo compte autant que la course." },
+    { phase: "Phase 1 · Genou", footing: 1, footingInfo: "4,5 km sur du plat", fract: 0, sortieLongue: "6 km, sur du plat", velo: 1, veloInfo: "40 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Sortie longue de 6 km sans forcer. Toujours 3 renfos dans la semaine." },
+    { phase: "Phase 1 · Semaine légère", footing: 1, footingInfo: "3 km sur du plat", fract: 0, sortieLongue: "5 km, sur du plat", velo: 1, veloInfo: "30 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Semaine légère : moins de course, garde le renfo." },
+    { phase: "Phase 1 · Genou", footing: 1, footingInfo: "5 km sur du plat", fract: 0, sortieLongue: "6,5 km, D+ 50 m", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Petites côtes : monte en courant, redescends en marchant." },
+    { phase: "Phase 1 · Genou", footing: 2, footingInfo: "3 km sur du plat", fract: 0, sortieLongue: "6,5 km, D+ 80 m", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Une 3e sortie, très courte. Descends les pentes douces à petits pas rapides." },
+    { phase: "Phase 1 · Genou", footing: 2, footingInfo: "3 km sur du plat", fract: 0, sortieLongue: "7,5 km, D+ 100 m", velo: 1, veloInfo: "50 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Sortie longue sur chemin souple si possible. Fêtes : saute plutôt un footing que le renfo." },
+    { phase: "Phase 1 · Semaine légère", footing: 1, footingInfo: "4 km sur du plat", fract: 0, sortieLongue: "6 km, D+ 50 m", velo: 1, veloInfo: "40 min tranquille", renfoGenou: 3, renfoTrail: 0,
+      consigne: "Bilan : sortie longue de S7 à 3/10 max et step-down sans douleur ? Phase 2. Sinon, garde Renfo genou et refais S7." },
+    { phase: "Phase 2 · Volume", footing: 2, footingInfo: "3,5 km tranquille", fract: 0, sortieLongue: "7,5 km, D+ 150 m", velo: 1, veloInfo: "50 min tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Nouveau circuit : Renfo trail. Sortie longue sur chemin doucement vallonné." },
+    { phase: "Phase 2 · Volume", footing: 2, footingInfo: "3,5 km tranquille", fract: 0, sortieLongue: "8,5 km, D+ 150 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Ralentis sur la sortie longue : tu approches de ton ancien seuil de douleur." },
+    { phase: "Phase 2 · Volume", footing: 1, footingInfo: "4 km tranquille", fract: 1, sortieLongue: "9 km, D+ 200 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Fractionné sur du plat avec « Course fractionnée ». Sortie longue toujours tranquille." },
+    { phase: "Phase 2 · Volume", footing: 1, footingInfo: "4,5 km tranquille", fract: 1, sortieLongue: "10 km, D+ 200 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Cap des 10 km. Fractionné en côte : monte vite, redescends en marchant ou au trot très lent." },
+    { phase: "Phase 2 · Semaine légère", footing: 1, footingInfo: "4 km tranquille", fract: 0, sortieLongue: "8 km, D+ 100 m", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Semaine légère : récupère, dors bien." },
+    { phase: "Phase 2 · Volume", footing: 1, footingInfo: "5 km tranquille", fract: 1, sortieLongue: "11 km, D+ 250 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Prends tes bâtons sur la sortie longue pour t'y habituer. Fractionné en côte." },
+    { phase: "Phase 2 · Volume", footing: 1, footingInfo: "5,5 km tranquille", fract: 1, sortieLongue: "12 km, D+ 300 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Bois et mange toutes les 45 min sur la sortie longue." },
+    { phase: "Phase 2 · Volume", footing: 1, footingInfo: "6 km tranquille", fract: 1, sortieLongue: "13 km, D+ 350 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "13 km : si ça dépasse 3/10, finis en marchant." },
+    { phase: "Phase 2 · Semaine légère", footing: 1, footingInfo: "5 km tranquille", fract: 0, sortieLongue: "10 km, D+ 200 m", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Semaine légère avant d'attaquer le dénivelé." },
+    { phase: "Phase 3 · Dénivelé", footing: 1, footingInfo: "6 km tranquille", fract: 1, sortieLongue: "14 km, D+ 400 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Côtes raides : marche vite en t'aidant des bâtons." },
+    { phase: "Phase 3 · Dénivelé", footing: 1, footingInfo: "6 km tranquille", fract: 1, sortieLongue: "15,5 km, D+ 500 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Ajoute 3 × 3 min de descente technique, toujours sous contrôle." },
+    { phase: "Phase 3 · Dénivelé", footing: 1, footingInfo: "7 km tranquille", fract: 1, sortieLongue: "17 km, D+ 600 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Teste ta tenue, tes chaussures et ce que tu bois et manges : ça servira pour les sorties de plus de 2 h." },
+    { phase: "Phase 3 · Semaine légère", footing: 1, footingInfo: "5 km tranquille", fract: 0, sortieLongue: "12 km, D+ 350 m", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Semaine légère : garde les jambes fraîches." },
+    { phase: "Phase 3 · Dénivelé", footing: 1, footingInfo: "7 km tranquille", fract: 1, sortieLongue: "19 km, D+ 700 m", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Bilan : 19 km à 3/10 max ? Choisis ton objectif : continuer vers 25 km, ou te stabiliser autour de 20 km si ça te suffit ou si le genou se réveille." },
+    { phase: "Phase 3 · Dénivelé", footing: 1, footingInfo: "7 km tranquille", fract: 1, sortieLongue: "21 km, D+ 800 m (objectif 20 km : 18 km, D+ 700 m)", velo: 1, veloInfo: "1 h tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Choisis un parcours que tu connais, avec des descentes pas trop raides. Prends tes bâtons et à boire." },
+    { phase: "Phase 3 · Dénivelé", footing: 1, footingInfo: "7 km tranquille", fract: 1, sortieLongue: "23 km, D+ 900 m (objectif 20 km : 20 km, D+ 800 m)", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Grosse sortie : pars lentement, marche dans les montées. Note ton genou le soir et le lendemain matin." },
+    { phase: "Phase 3 · Semaine légère", footing: 1, footingInfo: "5 km tranquille", fract: 0, sortieLongue: "14 km, D+ 400 m", velo: 1, veloInfo: "45 min tranquille", renfoGenou: 0, renfoTrail: 2,
+      consigne: "Semaine légère : récupère avant ta plus longue sortie. Garde les 2 renfos." },
+    { phase: "Phase 3 · Sortie la plus longue", footing: 1, footingInfo: "5 km tranquille, en début de semaine", fract: 0, sortieLongue: "Facultatif : ~25 km, D+ 900 m max, à ton rythme, marche autorisée (sinon 20 km, D+ 800 m)", velo: 1, veloInfo: "45 min tranquille, après la sortie longue", renfoGenou: 0, renfoTrail: 1,
+      consigne: "Genou à 3/10 max sur les dernières sorties ? Tente les 25 km, sans chrono, avec à boire et à manger. Sinon, reste à 20 km : c'est déjà très bien." }
+  ],
+  apres: { footing: 1, sortieLongue: 1, fract: 1, velo: 1, renfoGenou: 0, renfoTrail: 1 }
+};
+const TRAIL_TEXTES = {
+  securite: "Douleur jusqu'à 3/10 : ok. Au-delà : stop. Va voir un kiné du sport si la douleur persiste malgré le programme, et tout de suite si ton genou gonfle, se bloque ou lâche. Cette app ne remplace pas un avis médical.",
+  blocs: [
+    { titre: "Si le genou fait mal", lignes: [
+      "3/10 ou moins, et c'est passé le lendemain matin : continue le plan.",
+      "4-5/10, ou encore là le lendemain : arrête la sortie et refais la même semaine.",
+      "Plus de 5/10, deux sorties de suite, ou tu boites : refais la semaine d'avant et descends en marchant.",
+      "Ça revient deux fois au même palier, ou ça ne passe pas en 2-3 semaines : va voir un kiné du sport.",
+      "Genou qui gonfle, se bloque ou lâche : arrête tout et consulte.",
+      "Tu as refait des semaines ? Ne rattrape pas le retard : en fin de plan, reste à 20 km maximum."
+    ]},
+    { titre: "Technique de descente", lignes: [
+      "Petits pas rapides, comme si le sol était brûlant.",
+      "Pied à plat ou sur l'avant, sous ton bassin : ne freine pas sur le talon.",
+      "Penche-toi un peu en avant et regarde 3-4 m devant toi.",
+      "Genoux souples. Si ça tape, ralentis au lieu de te raidir.",
+      "Utilise tes bâtons. Pente raide ou genou qui se réveille : marche, ce n'est pas un échec."
+    ]},
+    { titre: "Le vélo peut-il régler le problème ?", texte: "Pas à lui seul. Le vélo entretient ton cardio sans chocs et muscle tes quadriceps : il aide et soulage ton genou. Mais il ne travaille pas le freinage en descente, justement ce qui fait mal en trail : pour ça, il faut le renfo et une reprise progressive de la course." }
+  ]
+};
+/* Photos des exercices (app-sport/img/<Nom>_0.jpg = départ, _1.jpg = arrivée).
+   Seulement quand la photo montre vraiment le même mouvement. */
+const PHOTOS = {
+  "Pompes classiques": "Pushups",
+  "Pompes lentes": "Pushups",
+  "Pompes serrées": "Push-Ups_-_Close_Triceps_Position",
+  "Tractions": "Pullups",
+  "Développé debout": "Standing_Dumbbell_Press",
+  "Élévations latérales": "Side_Lateral_Raise",
+  "Élévations frontales alternées": "Front_Dumbbell_Raise",
+  "Curl classique": "Dumbbell_Bicep_Curl",
+  "Curl marteau": "Hammer_Curls",
+  "Curl inversé": "Standing_Dumbbell_Reverse_Curl",
+  "Kickbacks": "Tricep_Dumbbell_Kickback",
+  "Shrugs": "Dumbbell_Shrug"
+};
+const photoExo = e => e[3] || PHOTOS[e[0]] || null; // 4e élément d'un exo (facultatif) = nom de la photo
+
 const act = id => ACTIVITES.find(a => a.id === id);
 const parCat = c => ACTIVITES.filter(a => a.cat === c);
-const objectif = a => a.parSemaine || 1;
+
+/* Semaine du plan, calculée à partir du lundi de la semaine en cours.
+   Avant le début : semaine 1. Après la dernière : plan terminé (objectifs "apres"). */
+function semainePlan(d = new Date()) {
+  const [y, m, j] = PLAN_TRAIL.debut.split("-").map(Number);
+  const jours = Math.round((lundi(d) - new Date(y, m - 1, j)) / 86400000); // arrondi : changements d'heure
+  const total = PLAN_TRAIL.semaines.length, n = Math.floor(jours / 7) + 1;
+  if (n < 1) return { n: 1, total, statut: "avant", ligne: PLAN_TRAIL.semaines[0] };
+  if (n > total) return { n: total, total, statut: "fini", ligne: null };
+  return { n, total, statut: "en cours", ligne: PLAN_TRAIL.semaines[n - 1] };
+}
+// Objectifs de la semaine réglés par le plan (les autres activités : parSemaine)
+function objectifsPlan() {
+  const p = semainePlan(), l = p.ligne || PLAN_TRAIL.apres;
+  // avant le début : rien d'imposé (vélo et course gardent leur fréquence habituelle)
+  if (p.statut === "avant") return { "renfo-genou": 0, "renfo-trail": 0, "trail-footing": 0, "trail-sortie-longue": 0 };
+  return { "renfo-genou": l.renfoGenou, "renfo-trail": l.renfoTrail, "trail-footing": l.footing,
+    "trail-sortie-longue": p.ligne ? 1 : l.sortieLongue, course: l.fract, velo: l.velo };
+}
+function objectif(a) {
+  const o = objectifsPlan();
+  return a.id in o ? o[a.id] : (a.parSemaine || 1);
+}
+// Textes des sorties qui suivent la semaine du plan
+function infoAct(a) {
+  const l = semainePlan().ligne;
+  if (l && a.id === "trail-footing") return l.footingInfo;
+  if (l && a.id === "trail-sortie-longue") return l.sortieLongue;
+  if (l && a.id === "velo" && semainePlan().statut === "en cours") return l.veloInfo;
+  return a.info;
+}
+function descAct(a) {
+  const l = semainePlan().ligne;
+  return l && a.id === "trail-sortie-longue" ? l.consigne : a.desc;
+}
+const auProgramme = a => objectif(a) > 0;
+// fréquence affichée dans les listes : "×2/sem." ou "pas au programme cette semaine"
+const frequence = a => { const o = objectif(a); return o === 0 ? " · pas au programme cette semaine" : o > 1 ? ` · ×${o}/sem.` : ""; };
+function titrePlan() {
+  const p = semainePlan();
+  if (p.statut === "fini") return "Plan terminé · entretien";
+  if (p.statut === "avant") { const [, m, j] = PLAN_TRAIL.debut.split("-"); return `Plan trail · début lundi ${j}/${m}`; }
+  return `Semaine ${p.n}/${p.total} · ${p.ligne.phase}`;
+}
+function sousTitrePlan() {
+  const p = semainePlan();
+  if (p.statut === "fini") return "Bravo ! Garde 1 Renfo trail par semaine pour entretenir ton genou.";
+  if (p.statut === "avant") return "Rien d'imposé cette semaine. Voici la semaine 1 en aperçu.";
+  return "";
+}
 
 /* ---------- État (réglages + semaine), sauvegardé en ligne ---------- */
 function load(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 function saveLocal() { try { localStorage.setItem("etat", JSON.stringify(etat)); } catch (e) {} }
 let etat = load("etat", null) || { reglages: load("reglages", {}), semaines: load("semaines", {}), dernier: null };
 normaliser();
-function normaliser() {
-  etat.reglages = etat.reglages || {}; etat.semaines = etat.semaines || {};
+function normaliser(e = etat) {
+  e.reglages = e.reglages || {}; e.semaines = e.semaines || {};
+  e.majReglages = e.majReglages || {}; e.majSemaines = e.majSemaines || {}; // dates des modifications (absentes des anciennes données)
   // anciennes données : une liste d'ids par semaine → un compteur par activité
-  for (const k in etat.semaines) if (Array.isArray(etat.semaines[k])) {
-    const o = {}; etat.semaines[k].forEach(id => o[id] = 1); etat.semaines[k] = o;
+  for (const k in e.semaines) if (Array.isArray(e.semaines[k])) {
+    const o = {}; e.semaines[k].forEach(id => o[id] = 1); e.semaines[k] = o;
   }
+  return e;
 }
-function save() { saveLocal(); sync(); }
+/* Fusion de l'état local (ce téléphone) et de celui du cloud, au lieu d'écraser.
+   Chaque modification porte sa date (horloge du téléphone) :
+   - majSemaines[semaine][activité] : date du dernier +1 / −1 (gardée même quand le compteur retombe à 0) ;
+   - majReglages[activité] : date du dernier réglage ; majDernier : date du dernier changement de "dernier".
+   Règle, pour chaque compteur / réglage / "dernier" : la valeur la plus récemment datée gagne (une date bat l'absence de date,
+   donc un retrait daté gagne aussi). Sans date des deux côtés (anciennes données) : compteurs → le plus grand ;
+   réglage présent d'un seul côté → on le garde ; sinon le côté dont "maj" (date globale) est le plus récent.
+   Renvoie { etat, apport, change } : apport = le local apporte quelque chose au cloud (à renvoyer),
+   change = le résultat diffère de l'état local (à réafficher). */
+function fusionner(local, cloud) {
+  const copie = o => normaliser(JSON.parse(JSON.stringify(o || {})));
+  const L = copie(local), C = copie(cloud);
+  const localPlusRecent = (L.maj || "") > (C.maj || "");
+  let apport = false, change = false;
+  // choisit entre la valeur locale (vl, date dl) et celle du cloud (vc, dc) ; sansDate(vl, vc) décide quand aucune date
+  function choisir(vl, dl, vc, dc, sansDate, egal) {
+    let local;
+    if (dl || dc) local = (dl || "") > (dc || "") ? true : (dc || "") > (dl || "") ? false : sansDate(vl, vc);
+    else local = sansDate(vl, vc);
+    const v = local ? vl : vc, d = (dl || "") > (dc || "") ? dl : (dc || dl || null);
+    if (!egal(v, vc) || (d || null) !== (dc || null)) apport = true;  // le cloud n'a pas encore ça
+    if (!egal(v, vl) || (d || null) !== (dl || null)) change = true;  // ce téléphone non plus
+    return [v, d];
+  }
+  const memeJSON = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  // compteurs des semaines
+  const semaines = {}, majSemaines = {};
+  new Set([...Object.keys(L.semaines), ...Object.keys(C.semaines), ...Object.keys(L.majSemaines), ...Object.keys(C.majSemaines)]).forEach(k => {
+    const a = L.semaines[k] || {}, b = C.semaines[k] || {}, da = L.majSemaines[k] || {}, db = C.majSemaines[k] || {};
+    new Set([...Object.keys(a), ...Object.keys(b), ...Object.keys(da), ...Object.keys(db)]).forEach(id => {
+      const [v, d] = choisir(+a[id] || 0, da[id], +b[id] || 0, db[id], (x, y) => x >= y, (x, y) => x === y);
+      if (v > 0) (semaines[k] = semaines[k] || {})[id] = v;
+      if (d) (majSemaines[k] = majSemaines[k] || {})[id] = d;
+    });
+  });
+  // réglages, activité par activité
+  const reglages = {}, majReglages = {};
+  new Set([...Object.keys(L.reglages), ...Object.keys(C.reglages)]).forEach(id => {
+    const vl = L.reglages[id], vc = C.reglages[id];
+    const sansDate = () => vc === undefined ? true : vl === undefined ? false : localPlusRecent;
+    const [v, d] = choisir(vl, L.majReglages[id], vc, C.majReglages[id], sansDate, memeJSON);
+    if (v !== undefined) reglages[id] = v;
+    if (d) majReglages[id] = d;
+  });
+  // dernière séance de muscu (sert à la suggestion)
+  const [dernier, majDernier] = choisir(L.dernier || null, L.majDernier, C.dernier || null, C.majDernier,
+    (x, y) => y === null ? true : x === null ? false : localPlusRecent, (x, y) => x === y);
+  const maj = localPlusRecent ? L.maj : (C.maj || L.maj || null);
+  return { etat: { reglages, semaines, dernier, maj, majReglages, majSemaines, majDernier: majDernier || null }, apport, change };
+}
+// Ce qu'on envoie au cloud (les deux versions de sync l'utilisent)
+function donneesCloud() {
+  return { reglages: etat.reglages, semaines: etat.semaines, dernier: etat.dernier || null, maj: etat.maj || new Date().toISOString(),
+    majReglages: etat.majReglages || {}, majSemaines: etat.majSemaines || {}, majDernier: etat.majDernier || null };
+}
+function save() { etat.maj = new Date().toISOString(); saveLocal(); sync(); }
 
 /* Sauvegarde en ligne (Supabase, API REST) : une seule ligne dans la table "etat" */
 const SB_URL = "https://fuoosyufzvjayfybsylx.supabase.co";
@@ -337,26 +601,38 @@ async function envoyer(data) {
   });
   if (!r.ok) throw new Error("HTTP " + r.status);
 }
-function sync() {
+// Lit l'état en ligne : null si la ligne n'existe pas encore
+async function lireCloud() {
+  const r = await fetch(SB_URL + "/rest/v1/etat?id=eq." + SB_ID + "&select=data", { headers: SB_HEADERS, cache: "no-store" });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const rows = await r.json();
+  return rows.length ? rows[0].data || {} : null;
+}
+function cloudPret() { return cloudOk; }
+/* Envoi : on relit d'abord le cloud et on fusionne (un autre appareil a pu cocher entre-temps).
+   sync() envoie toujours ; sync(false) n'envoie que si ce téléphone apporte quelque chose. */
+function sync(toujours = true) {
   if (!cloudOk) return;
-  const data = { reglages: etat.reglages, semaines: etat.semaines, dernier: etat.dernier || null, maj: new Date().toISOString() };
   const note = document.getElementById("save-note");
-  cloudQueue = cloudQueue.then(() => envoyer(data)).then(() => { note.hidden = true; }).catch(() => { note.hidden = false; });
+  cloudQueue = cloudQueue.then(async () => {
+    const d = await lireCloud();
+    const f = fusionner(etat, d || {});
+    etat = f.etat; saveLocal();
+    if (f.change) renderTout();
+    if (toujours || f.apport || !d) await envoyer(donneesCloud());
+  }).then(() => { note.hidden = true; }).catch(() => { note.hidden = false; });
 }
 async function connecterCloud() {
   const note = document.getElementById("save-note");
   const t = setTimeout(() => { note.hidden = false; }, 10000);
   try {
-    const r = await fetch(SB_URL + "/rest/v1/etat?id=eq." + SB_ID + "&select=data", { headers: SB_HEADERS, cache: "no-store" });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const rows = await r.json();
+    const d = await lireCloud();
     clearTimeout(t);
     cloudOk = true;
-    if (rows.length) {
-      const d = rows[0].data || {};
-      etat = { reglages: d.reglages || {}, semaines: d.semaines || {}, dernier: d.dernier || null };
-      normaliser(); saveLocal();
-    } else sync(); // première fois : on envoie ce qu'il y a sur ce téléphone
+    // fusion avec ce qui a pu être fait hors ligne sur ce téléphone (au lieu d'écraser)
+    const f = fusionner(etat, d || {});
+    etat = f.etat; saveLocal();
+    if (f.apport || !d) cloudQueue = cloudQueue.then(() => envoyer(donneesCloud())).catch(() => { note.hidden = false; }); // première fois : on envoie ce qu'il y a sur ce téléphone
     note.hidden = true;
     renderTout();
   } catch (e) { clearTimeout(t); note.hidden = false; }
@@ -368,7 +644,9 @@ function lundi(d = new Date()) { const x = new Date(d); x.setHours(0,0,0,0); x.s
 function cleSemaine() { const l = lundi(); return l.getFullYear() + "-" + String(l.getMonth()+1).padStart(2,"0") + "-" + String(l.getDate()).padStart(2,"0"); }
 function semaine() { return etat.semaines[cleSemaine()] || {}; }
 const nbFait = id => semaine()[id] || 0;
-const complet = a => nbFait(a.id) >= objectif(a);
+// fait cette semaine (une activité hors programme cette semaine : faite dès 1 fois)
+const complet = a => nbFait(a.id) >= Math.max(1, objectif(a));
+const aFaire = a => auProgramme(a) && !complet(a);
 const dureeExo = (a, e) => e[2] || cfg(a).effort;
 const dureesFixes = a => a.exos.length > 0 && a.exos.every(e => e[2]);
 function dureeSec(a) {
@@ -376,7 +654,7 @@ function dureeSec(a) {
   return a.exos.reduce((s, e) => s + dureeExo(a, e), 0) * c.tours + (n - 1) * c.recup;
 }
 function fmt(sec) { const m = Math.floor(sec / 60), s = sec % 60; return s ? m + " min " + String(s).padStart(2,"0") : m + " min"; }
-const meta = a => a.type === "sortie" ? a.info : fmt(dureeSec(a));
+const meta = a => a.type === "sortie" ? infoAct(a) : fmt(dureeSec(a));
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const bouton = a => a.type === "sortie" ? `<button class="play" data-done="${a.id}">✓ Fait</button>` : `<button class="play" data-start="${a.id}">▶ Lancer</button>`;
@@ -391,8 +669,11 @@ function ajouter(id, delta) {
   s[id] = Math.max(0, (s[id] || 0) + delta);
   if (!s[id]) delete s[id];
   etat.semaines[k] = s;
+  const maintenant = new Date().toISOString();
+  etat.majSemaines = etat.majSemaines || {};
+  etat.majSemaines[k] = Object.assign({}, etat.majSemaines[k] || {}, { [id]: maintenant }); // la date reste même à 0 (retrait)
   const a = act(id);
-  if (delta > 0 && a && a.cat === "muscu") etat.dernier = id;
+  if (delta > 0 && a && a.cat === "muscu" && etat.dernier !== id) { etat.dernier = id; etat.majDernier = maintenant; }
   save(); renderTout();
   if (a) toast(delta > 0 ? `✓ ${a.nom} coché pour cette semaine` : `${a.nom} retiré`);
 }
@@ -410,19 +691,40 @@ function suggestions() {
   const i = ordre.indexOf(etat.dernier);
   const tour = i < 0 ? muscu : [...muscu.slice(i + 1), ...muscu.slice(0, i + 1)];
   const derniereFamille = etat.dernier ? act(etat.dernier)?.famille : null;
-  let restes = tour.filter(a => !complet(a));
+  let restes = tour.filter(aFaire);
   // on évite d'enchaîner deux fois la même famille (pousser / tirer)
   restes = [...restes.filter(a => a.famille !== derniereFamille || a.famille === "autre"), ...restes.filter(a => a.famille === derniereFamille && a.famille !== "autre")];
-  const autres = ACTIVITES.filter(a => a.cat !== "muscu" && !complet(a));
+  const autres = ACTIVITES.filter(a => a.cat !== "muscu" && aFaire(a));
   return [...restes, ...autres];
 }
+/* ---------- Plan trail : bloc de la semaine, en-tête de la catégorie Trail, photos ---------- */
+function blocPlan() {
+  const l = semainePlan().ligne, sous = sousTitrePlan();
+  return `<button class="plan" data-trail="1"><span class="plan-k">⛰️ Plan trail</span><h2>${esc(titrePlan())}</h2>
+    ${sous ? `<span class="plan-s">${esc(sous)}</span>` : ""}
+    ${l ? `<span class="plan-l"><b>Sortie longue :</b> ${esc(l.sortieLongue)}</span><span class="plan-s">${esc(l.consigne)}</span>` : ""}
+    <span class="plan-s">⚠️ Genou : jusqu'à 3/10 ok, au-delà stop.</span></button>`;
+}
+function enteteTrail() {
+  const l = semainePlan().ligne, sous = sousTitrePlan();
+  return `<div class="plan"><h2>${esc(titrePlan())}</h2>${sous ? `<span class="plan-s">${esc(sous)}</span>` : ""}${l ? `<span class="plan-s">${esc(l.consigne)}</span>` : ""}</div>
+    <p class="note">⚠️ ${esc(TRAIL_TEXTES.securite)}</p>
+    <div class="infos">${TRAIL_TEXTES.blocs.map(b => `<details class="info"><summary>${esc(b.titre)}</summary>
+      ${b.lignes ? `<ul>${b.lignes.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p>${esc(b.texte)}</p>`}</details>`).join("")}</div>
+    <div class="label">Activités</div>`;
+}
+const vignette = e => { const p = photoExo(e); return p ? `<img class="ex-photo" src="img/${p}_0.jpg" alt="${esc(e[0])} : position de départ" loading="lazy" width="72" height="48">` : ""; };
+// vignette introuvable : on la retire (écouteur global plutôt qu'un onerror dans le HTML)
+document.addEventListener("error", e => { if (e.target.classList && e.target.classList.contains("ex-photo")) e.target.remove(); }, true);
+
 function renderAujourdhui() {
   document.getElementById("chips").innerHTML = CATEGORIES.map(c => {
     const { fait, total } = score(parCat(c.id));
     return `<div class="chip"><small>${c.icone} ${esc(c.nom)}</small><strong>${fait}/${total}</strong>
       <div class="bar"><i style="width:${total ? fait / total * 100 : 0}%"></i></div></div>`;
   }).join("");
-  const reste = ACTIVITES.filter(a => !complet(a));
+  document.getElementById("plan").innerHTML = blocPlan();
+  const reste = ACTIVITES.filter(aFaire);
   document.getElementById("reste").innerHTML = reste.length
     ? `<div>${reste.map(a => `<div class="mini"><div class="txt"><b>${esc(a.nom)}</b><div class="meta">${esc(meta(a))}</div></div>
         <button data-${a.type === "sortie" ? "done" : "start"}="${a.id}">${a.type === "sortie" ? "✓ Fait" : "▶ Lancer"}</button></div>`).join("")}</div>`
@@ -436,23 +738,31 @@ function renderSemaine() {
   document.getElementById("week-bar").style.width = (total ? fait / total * 100 : 0) + "%";
   document.getElementById("week-list").innerHTML = CATEGORIES.map(c => `<div class="label">${c.icone} ${esc(c.nom)}</div>` + parCat(c.id).map(a => {
     const ok = complet(a), n = nbFait(a.id), obj = objectif(a);
-    return `<div class="task${ok ? " done" : ""}">
+    return `<div class="task${ok ? " done" : ""}${obj === 0 && !ok ? " off" : ""}">
       <button class="check" data-toggle="${a.id}" aria-label="${ok ? "Décocher" : "Cocher"} ${esc(a.nom)}">${CHECK}</button>
-      <div class="txt"><h2>${esc(a.nom)}</h2><div class="meta">${esc(meta(a))}${obj > 1 ? ` · ${n}/${obj}` : ""}</div></div>
-      ${ok ? `<button class="del" data-del="${a.id}">Retirer</button>` : bouton(a)}
+      <div class="txt"><h2>${esc(a.nom)}</h2><div class="meta">${esc(meta(a))}${obj > 1 ? ` · ${n}/${obj}` : ""}${obj === 0 ? " · pas au programme cette semaine" : ""}</div></div>
+      ${ok ? `<button class="del" data-del="${a.id}">Retirer</button>`
+        : n > 0 ? `<div class="acts">${bouton(a)}${boutonMoins(a)}</div>` : bouton(a)}
     </div>`;
   }).join("")).join("");
 }
+// « −1 » : enlève une séance quand l'objectif n'est pas atteint (ex. 2/3 → 1/3) ; à l'objectif, c'est « Retirer »
+const boutonMoins = a => `<button class="del" data-moins="${a.id}" aria-label="Enlever une séance de ${esc(a.nom)}">−1</button>`;
+function compteur(a) { // fiche : compteur partiel + « −1 »
+  const n = nbFait(a.id), obj = objectif(a);
+  return n > 0 && !complet(a) ? `<p class="compteur">Cette semaine : ${n}/${obj} ${boutonMoins(a)}</p>` : "";
+}
 let delTimer = null;
+const libelleDel = x => x.dataset.del ? "Retirer" : "−1";
 function retirer(b) {
   if (!b.classList.contains("sure")) {
-    document.querySelectorAll(".del.sure").forEach(x => { x.classList.remove("sure"); x.textContent = "Retirer"; });
+    document.querySelectorAll(".del.sure").forEach(x => { x.classList.remove("sure"); x.textContent = libelleDel(x); });
     b.classList.add("sure"); b.textContent = "Confirmer";
     clearTimeout(delTimer);
-    delTimer = setTimeout(() => { b.classList.remove("sure"); b.textContent = "Retirer"; }, 3000);
+    delTimer = setTimeout(() => { b.classList.remove("sure"); b.textContent = libelleDel(b); }, 3000);
     return;
   }
-  ajouter(b.dataset.del, -1);
+  ajouter(b.dataset.del || b.dataset.moins, -1);
 }
 
 /* ---------- Activités : catégories → liste → fiche ---------- */
@@ -460,10 +770,13 @@ let vue = { cat: null, id: null };
 function renderActivites() {
   const el = document.getElementById("act-view");
   if (vue.id) {
-    const a = act(vue.id), c = CATEGORIES.find(x => x.id === a.cat);
+    const a = act(vue.id), c = CATEGORIES.find(x => x.id === a.cat), obj = objectif(a);
     const back = `<button class="back" data-vue="${a.cat}">‹ ${esc(c.nom)}</button>`;
     if (a.type === "sortie") {
-      el.innerHTML = `${back}<h1>${esc(a.nom)}</h1><p class="sub">${esc(a.info)}</p><p>${esc(a.desc)}</p>
+      el.innerHTML = `${back}<h1>${esc(a.nom)}</h1><p class="sub">${esc(infoAct(a))}${obj > 1 ? ` · ${obj} fois cette semaine (${nbFait(a.id)}/${obj})` : ""}</p><p>${esc(descAct(a))}</p>
+        ${a.id === "trail-sortie-longue" ? `<p class="note">⚠️ ${esc(TRAIL_TEXTES.securite)}</p>` : ""}
+        ${obj === 0 ? `<p class="note">Pas au programme cette semaine : tu peux quand même la cocher.</p>` : ""}
+        ${compteur(a)}
         ${complet(a)
           ? `<p class="fait-ok">✓ Fait cette semaine</p><button class="ghost" style="padding:14px 16px" data-toggle="${a.id}">Annuler</button>`
           : `<button class="big" data-done="${a.id}">✓ Marquer comme fait</button>`}`;
@@ -473,22 +786,24 @@ function renderActivites() {
     const set = (key, lab, unit) => `<div class="set"><small>${lab}</small><div class="val">${k[key]}${unit}</div>
       <div class="row"><button data-adj="${key}" data-d="-1" aria-label="Moins">−</button><button data-adj="${key}" data-d="1" aria-label="Plus">+</button></div></div>`;
     const fixes = dureesFixes(a);
-    el.innerHTML = `${back}<h1>${esc(a.nom)}</h1><p class="sub">${esc(a.materiel)} · circuit de ${a.exos.length} exercice${a.exos.length > 1 ? "s" : ""}${a.parSemaine > 1 ? ` · ${a.parSemaine} fois par semaine (${nbFait(a.id)}/${a.parSemaine})` : ""}</p>
+    el.innerHTML = `${back}<h1>${esc(a.nom)}</h1><p class="sub">${esc(a.materiel)} · circuit de ${a.exos.length} exercice${a.exos.length > 1 ? "s" : ""}${obj > 1 ? ` · ${obj} fois cette semaine (${nbFait(a.id)}/${obj})` : obj === 0 ? " · pas au programme cette semaine" : ""}</p>
       ${a.note ? `<p class="note">⚠️ ${esc(a.note)}</p>` : ""}
+      ${compteur(a)}
       <div class="settings"${fixes ? ' style="grid-template-columns:repeat(2,1fr)"' : ""}>${fixes ? "" : set("effort","Effort","s")}${set("recup","Récup","s")}${set("tours","Tours","")}</div>
       <p class="total">Durée : ${fmt(dureeSec(a))} · ${a.exos.length * k.tours} séries · + ${fmt(a.warm || 60)} d'échauffement</p>
       <div class="label">Exercices, dans l'ordre</div>
-      <ol class="exos">${a.exos.map(e => `<li><div><b>${esc(e[0])}</b>${e[2] ? ` <span class="meta">· ${e[2]} s</span>` : ""}<p>${esc(e[1])}</p></div></li>`).join("")}</ol>
+      <ol class="exos">${a.exos.map(e => `<li><div><b>${esc(e[0])}</b>${e[2] ? ` <span class="meta">· ${e[2]} s</span>` : ""}<p>${esc(e[1])}</p></div>${vignette(e)}</li>`).join("")}</ol>
       <button class="big" data-start="${a.id}">▶ Lancer la séance</button>`;
     return;
   }
   if (vue.cat) {
     const c = CATEGORIES.find(x => x.id === vue.cat);
     el.innerHTML = `<button class="back" data-vue="">‹ Activités</button><h1>${c.icone} ${esc(c.nom)}</h1><p class="sub">${esc(c.desc)}</p>
+      ${c.id === "trail" ? enteteTrail() : ""}
       <div class="stack">${parCat(c.id).map(a => {
         const k = a.type === "circuit" ? cfg(a) : null;
-        const info = a.type === "sortie" ? a.info
-          : `${a.exos.length} exo${a.exos.length > 1 ? "s" : ""} · ${dureesFixes(a) ? "durées variables" : k.effort + "s"} / ${k.recup}s · ${k.tours} tour${k.tours > 1 ? "s" : ""} · ${fmt(dureeSec(a))}${a.parSemaine > 1 ? ` · ×${a.parSemaine}/sem.` : ""}`;
+        const info = a.type === "sortie" ? infoAct(a) + frequence(a)
+          : `${a.exos.length} exo${a.exos.length > 1 ? "s" : ""} · ${dureesFixes(a) ? "durées variables" : k.effort + "s"} / ${k.recup}s · ${k.tours} tour${k.tours > 1 ? "s" : ""} · ${fmt(dureeSec(a))}${frequence(a)}`;
         return `<button class="card" data-fiche="${a.id}"><div class="txt"><h2>${esc(a.nom)}${complet(a) ? " ✓" : ""}</h2>
           <div class="meta">${esc(info)}</div></div><span class="chev">›</span></button>`;
       }).join("")}</div>`;
@@ -505,7 +820,9 @@ function ajuster(key, d) {
   const a = act(vue.id), k = cfg(a);
   const lim = { effort: [10, 120, 5], recup: [0, 120, 5], tours: [1, 10, 1] }[key];
   k[key] = Math.min(lim[1], Math.max(lim[0], k[key] + d * lim[2]));
-  etat.reglages[a.id] = k; save(); renderTout();
+  etat.reglages[a.id] = k;
+  etat.majReglages = etat.majReglages || {}; etat.majReglages[a.id] = new Date().toISOString();
+  save(); renderTout();
 }
 
 function renderTout() { renderAujourdhui(); renderSemaine(); renderActivites(); }
@@ -676,6 +993,20 @@ function etapes(a) {
   });
   return out;
 }
+/* Photo de l'exercice dans le timer : départ (_0) et arrivée (_1) alternent pour montrer le mouvement */
+let photoTimer = null, photoCourante = null;
+function montrerPhoto(e) {
+  const img = T("t-photo"), p = e ? photoExo(e) : null;
+  if (e) img.alt = "Mouvement : " + e[0];
+  if (p && p === photoCourante) return; // même exo (récup → effort) : on laisse tourner
+  clearInterval(photoTimer); photoTimer = null; photoCourante = p;
+  if (!p) { img.hidden = true; img.removeAttribute("src"); return; }
+  const srcs = ["img/" + p + "_0.jpg", "img/" + p + "_1.jpg"]; let k = 0;
+  try { new Image().src = srcs[1]; } catch (err) {} // charge la 2e photo en avance
+  img.alt = "Mouvement : " + e[0]; img.src = srcs[0]; img.hidden = false;
+  photoTimer = setInterval(() => { k = 1 - k; img.src = srcs[k]; }, 1200);
+}
+T("t-photo").onerror = () => montrerPhoto(null); // photo absente : on n'affiche rien
 async function garderEcran() { try { wake = await navigator.wakeLock?.request("screen"); } catch (e) { wake = null; } }
 function lancer(id) {
   const a = act(id); if (!a || a.type !== "circuit") return;
@@ -696,6 +1027,7 @@ function demarrerEtape() {
   const nextIdx = run.steps.findIndex((x, j) => j > run.i && x.phase === "effort");
   const shownEx = st.phase === "rest" && run.steps[nextIdx] ? run.steps[nextIdx].ex : st.ex;
   T("t-name").textContent = s.exos[shownEx][0];
+  montrerPhoto(st.phase === "warm" ? null : s.exos[shownEx]); // effort : l'exo en cours · récup / prépare-toi : celui qui arrive
   if (st.phase === "effort") {
     const nx = run.steps[nextIdx];
     T("t-next").innerHTML = nx ? "Ensuite : <b>" + esc(s.exos[nx.ex][0]) + "</b>" : "<b>Dernier exercice !</b>";
@@ -737,7 +1069,7 @@ function finir() {
   const s = run.s, duree = Math.round((Date.now() - run.debut) / 1000);
   decalage = 0; ajouter(s.id, 1); ambiance.stop(); dire("Séance terminée. Bravo !", 700);
   bip(1046, 0.2, 0.4); setTimeout(() => bip(1318, 0.4, 0.4), 220);
-  T("timer").dataset.phase = "rest";
+  T("timer").dataset.phase = "rest"; montrerPhoto(null);
   T("t-phase").textContent = "TERMINÉ"; T("t-name").textContent = s.nom + " ✅";
   T("t-time").textContent = "Bravo";
   T("t-next").textContent = "Séance cochée pour cette semaine.";
@@ -748,7 +1080,7 @@ function finir() {
 }
 function fermer() {
   if (run) cancelAnimationFrame(run.raf);
-  couperMuet(); ambiance.stop(); if (!(run && run.fini)) taire();
+  couperMuet(); ambiance.stop(); montrerPhoto(null); if (!(run && run.fini)) taire();
   run = null; T("timer").hidden = true; T("t-cancel").hidden = false; T("t-quit").textContent = "Quitter la séance";
   try { wake && wake.release(); } catch (e) {} wake = null;
 }
@@ -824,8 +1156,9 @@ document.addEventListener("click", e => {
   else if (d.start) lancer(d.start);
   else if (d.done) { decalage = 0; ajouter(d.done, 1); }
   else if (d.toggle) { const a = act(d.toggle); ajouter(a.id, complet(a) ? -1 : 1); }
-  else if (d.del) retirer(b);
+  else if (d.del || d.moins) retirer(b);
   else if (d.autre) { decalage++; renderAujourdhui(); }
+  else if (d.trail) { show("activites"); vue = { cat: "trail", id: null }; renderActivites(); }
   else if (d.vue !== undefined) { vue = { cat: d.vue || null, id: null }; renderActivites(); window.scrollTo(0, 0); }
   else if (d.fiche) { vue.id = d.fiche; renderActivites(); window.scrollTo(0, 0); }
   else if (d.adj) ajuster(d.adj, +d.d);
@@ -841,8 +1174,20 @@ document.addEventListener("touchend", e => {
   dernierTap = t;
 }, { passive: false });
 
+/* Sauvegarde en ligne : connexion au démarrage, puis resynchronisation quand l'app revient au premier plan
+   ou que le réseau revient (réessaie aussi une app démarrée hors ligne). */
+let connexionEnCours = false;
+function reconnecter() {
+  if (cloudPret()) { sync(false); return; }
+  if (connexionEnCours) return;
+  connexionEnCours = true;
+  Promise.resolve().then(connecterCloud).catch(() => {}).then(() => { connexionEnCours = false; });
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) reconnecter(); });
+window.addEventListener("online", reconnecter);
+
 renderTout();
-connecterCloud();
+reconnecter();
 let saved = null; try { saved = localStorage.getItem("tab"); } catch (e) {}
 show(saved || "aujourdhui");
 if ("serviceWorker" in navigator) window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });

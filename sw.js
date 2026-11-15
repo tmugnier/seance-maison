@@ -1,5 +1,6 @@
 /* Service worker : l'appli s'ouvre même hors ligne. Jamais de cache pour Supabase. */
-const CACHE = "seance-v10";
+const CACHE = "seance-v14";
+const CACHE_PHOTOS = "seance-photos-v1"; // gardé d'une version à l'autre ; changer CACHE_PHOTOS (v2…) quand une photo change
 const FICHIERS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -8,7 +9,7 @@ self.addEventListener("install", e => {
 
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== CACHE_PHOTOS).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -27,6 +28,16 @@ self.addEventListener("fetch", e => {
         return r;
       }).catch(() => caches.match("index.html").then(r => r || caches.match("./")))
     );
+    return;
+  }
+
+  // Photos des exercices : cache d'abord, et mises en cache au premier affichage
+  if (url.pathname.includes("/img/")) {
+    e.respondWith(caches.open(CACHE_PHOTOS).then(c => c.match(req).then(r => r || fetch(req).then(rep => {
+      // seulement une vraie image (pas la page d'un portail Wi-Fi), et le service worker attend la fin de l'écriture
+      if (rep.ok && (rep.headers.get("content-type") || "").startsWith("image/")) e.waitUntil(c.put(req, rep.clone()));
+      return rep;
+    }))));
     return;
   }
 
