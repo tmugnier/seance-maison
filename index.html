@@ -225,7 +225,8 @@ nav button[aria-selected="true"] { color: var(--accent); }
    ===================================================================== */
 const CATEGORIES = [
   { id: "muscu", nom: "Musculation", icone: "💪", desc: "Séances avec timer" },
-  { id: "ext", nom: "Extérieur", icone: "🌳", desc: "Vélo, quad, course" }
+  { id: "ext", nom: "Extérieur", icone: "🌳", desc: "Vélo, quad, course" },
+  { id: "reeduc", nom: "Rééducation", icone: "🩹", desc: "Épaule gauche, à l'élastique" }
 ];
 
 const ACTIVITES = [
@@ -292,6 +293,16 @@ const ACTIVITES = [
     warm: 300, effort: 60, recup: 60, tours: 8, recupTxt: "Trotte doucement pour récupérer.",
     echauffement: "Footing très tranquille pendant 5 minutes, tu dois pouvoir parler facilement.", exos: [
     ["Course rapide", "Allure soutenue : tu peux dire quelques mots, pas tenir une conversation."]
+  ]},
+  // 3e élément d'un exo = sa durée propre en secondes (sinon : l'effort de la séance)
+  { id: "reeduc-epaule", nom: "Rééducation épaule", cat: "reeduc", type: "circuit", famille: "autre", materiel: "Élastique",
+    parSemaine: 3, effort: 45, recup: 20, tours: 3, warm: 60,
+    note: "Douleur jusqu'à 3/10 : ok. Au-delà : stop. Si ça ne va pas mieux d'ici 3-4 semaines, ou si tu as mal la nuit, va voir un kiné ou un médecin.",
+    echauffement: "Rotations d'épaules lentes, bras le long du corps, puis quelques rotations externes sans élastique.", exos: [
+    ["Tirage arrière", "Assis, élastique autour des pieds : tire les coudes en arrière, serre les omoplates 1 s, sans hausser les épaules. Environ 15 répétitions.", 45],
+    ["Rotation externe coudes collés", "Élastique autour des mains, coudes collés au corps : écarte les mains et tiens 5 s. Environ 10 répétitions.", 60],
+    ["Montées de bras à l'élastique", "Écarte les bras jusqu'à l'horizontale, l'élastique t'aide à finir. Si ça tire en haut, arrête-toi à hauteur d'épaule.", 45],
+    ["Appuis muraux", "De profil contre le mur, petit appui sur la main gauche, petits rebonds. Penche-toi un peu plus chaque semaine.", 30]
   ]}
 ];
 const act = id => ACTIVITES.find(a => a.id === id);
@@ -358,7 +369,12 @@ function cleSemaine() { const l = lundi(); return l.getFullYear() + "-" + String
 function semaine() { return etat.semaines[cleSemaine()] || {}; }
 const nbFait = id => semaine()[id] || 0;
 const complet = a => nbFait(a.id) >= objectif(a);
-function dureeSec(a) { const c = cfg(a), n = a.exos.length * c.tours; return n * c.effort + (n - 1) * c.recup; }
+const dureeExo = (a, e) => e[2] || cfg(a).effort;
+const dureesFixes = a => a.exos.length > 0 && a.exos.every(e => e[2]);
+function dureeSec(a) {
+  const c = cfg(a), n = a.exos.length * c.tours;
+  return a.exos.reduce((s, e) => s + dureeExo(a, e), 0) * c.tours + (n - 1) * c.recup;
+}
 function fmt(sec) { const m = Math.floor(sec / 60), s = sec % 60; return s ? m + " min " + String(s).padStart(2,"0") : m + " min"; }
 const meta = a => a.type === "sortie" ? a.info : fmt(dureeSec(a));
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
@@ -456,11 +472,13 @@ function renderActivites() {
     const k = cfg(a);
     const set = (key, lab, unit) => `<div class="set"><small>${lab}</small><div class="val">${k[key]}${unit}</div>
       <div class="row"><button data-adj="${key}" data-d="-1" aria-label="Moins">−</button><button data-adj="${key}" data-d="1" aria-label="Plus">+</button></div></div>`;
-    el.innerHTML = `${back}<h1>${esc(a.nom)}</h1><p class="sub">${esc(a.materiel)} · circuit de ${a.exos.length} exercice${a.exos.length > 1 ? "s" : ""}</p>
-      <div class="settings">${set("effort","Effort","s")}${set("recup","Récup","s")}${set("tours","Tours","")}</div>
+    const fixes = dureesFixes(a);
+    el.innerHTML = `${back}<h1>${esc(a.nom)}</h1><p class="sub">${esc(a.materiel)} · circuit de ${a.exos.length} exercice${a.exos.length > 1 ? "s" : ""}${a.parSemaine > 1 ? ` · ${a.parSemaine} fois par semaine (${nbFait(a.id)}/${a.parSemaine})` : ""}</p>
+      ${a.note ? `<p class="note">⚠️ ${esc(a.note)}</p>` : ""}
+      <div class="settings"${fixes ? ' style="grid-template-columns:repeat(2,1fr)"' : ""}>${fixes ? "" : set("effort","Effort","s")}${set("recup","Récup","s")}${set("tours","Tours","")}</div>
       <p class="total">Durée : ${fmt(dureeSec(a))} · ${a.exos.length * k.tours} séries · + ${fmt(a.warm || 60)} d'échauffement</p>
       <div class="label">Exercices, dans l'ordre</div>
-      <ol class="exos">${a.exos.map(e => `<li><div><b>${esc(e[0])}</b><p>${esc(e[1])}</p></div></li>`).join("")}</ol>
+      <ol class="exos">${a.exos.map(e => `<li><div><b>${esc(e[0])}</b>${e[2] ? ` <span class="meta">· ${e[2]} s</span>` : ""}<p>${esc(e[1])}</p></div></li>`).join("")}</ol>
       <button class="big" data-start="${a.id}">▶ Lancer la séance</button>`;
     return;
   }
@@ -470,7 +488,7 @@ function renderActivites() {
       <div class="stack">${parCat(c.id).map(a => {
         const k = a.type === "circuit" ? cfg(a) : null;
         const info = a.type === "sortie" ? a.info
-          : `${a.exos.length} exo${a.exos.length > 1 ? "s" : ""} · ${k.effort}s / ${k.recup}s · ${k.tours} tour${k.tours > 1 ? "s" : ""} · ${fmt(dureeSec(a))}`;
+          : `${a.exos.length} exo${a.exos.length > 1 ? "s" : ""} · ${dureesFixes(a) ? "durées variables" : k.effort + "s"} / ${k.recup}s · ${k.tours} tour${k.tours > 1 ? "s" : ""} · ${fmt(dureeSec(a))}${a.parSemaine > 1 ? ` · ×${a.parSemaine}/sem.` : ""}`;
         return `<button class="card" data-fiche="${a.id}"><div class="txt"><h2>${esc(a.nom)}${complet(a) ? " ✓" : ""}</h2>
           <div class="meta">${esc(info)}</div></div><span class="chev">›</span></button>`;
       }).join("")}</div>`;
@@ -652,7 +670,7 @@ let run = null, wake = null;
 function etapes(a) {
   const c = cfg(a), out = [{ phase: "warm", sec: a.warm || 60, ex: 0, tour: 1 }, { phase: "prep", sec: 5, ex: 0, tour: 1 }];
   for (let t = 1; t <= c.tours; t++) a.exos.forEach((e, i) => {
-    out.push({ phase: "effort", sec: c.effort, ex: i, tour: t });
+    out.push({ phase: "effort", sec: e[2] || c.effort, ex: i, tour: t });
     const last = t === c.tours && i === a.exos.length - 1;
     if (!last && c.recup > 0) out.push({ phase: "rest", sec: c.recup, ex: i, tour: t });
   });
