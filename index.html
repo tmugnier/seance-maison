@@ -486,15 +486,15 @@ function bip(freq = 880, dur = 0.15, vol = 0.35) {
     // Bip renforcé : onde carrée + harmonique, volume au max, compresseur pour monter le niveau sans saturer
     if (!audio._sortie) {
       const comp = audio.createDynamicsCompressor();
-      comp.threshold.value = -20; comp.knee.value = 0; comp.ratio.value = 12; comp.attack.value = 0.001; comp.release.value = 0.1;
-      const boost = audio.createGain(); boost.gain.value = 2.2;
+      comp.threshold.value = -35; comp.knee.value = 0; comp.ratio.value = 20; comp.attack.value = 0.001; comp.release.value = 0.05;
+      const boost = audio.createGain(); boost.gain.value = 5;
       comp.connect(boost).connect(audio.destination);
       audio._sortie = comp;
     }
     const t = audio.currentTime, g = audio.createGain(), niveau = Math.min(1, vol * 2.2);
     g.gain.setValueAtTime(niveau, t); g.gain.setValueAtTime(niveau, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
     g.connect(audio._sortie);
-    [["square", freq, 1], ["sine", freq * 2, 0.6]].forEach(([type, f, part]) => {
+    [["square", freq, 1], ["sawtooth", freq * 1.5, 0.5], ["square", freq * 2, 0.4]].forEach(([type, f, part]) => {
       const o = audio.createOscillator(), og = audio.createGain();
       o.type = type; o.frequency.value = f; og.gain.value = part;
       o.connect(og).connect(g); o.start(t); o.stop(t + dur + 0.02);
@@ -568,8 +568,9 @@ function demarrerEtape() {
     T("t-next").textContent = s.echauffement || "Cercles de bras, rotations d'épaules, quelques pompes faciles.";
   }
   // Effort : double bip aigu · Récup : bip grave long
-  if (st.phase === "effort") { bip(1046, 0.25, 0.5); setTimeout(() => bip(1046, 0.35, 0.5), 300); }
-  else if (st.phase === "rest") bip(523, 0.6, 0.5);
+  // Fréquences autour de 2 kHz : là où l'oreille et le haut-parleur de l'iPhone sont les plus efficaces
+  if (st.phase === "effort") [0, 220, 440].forEach(d => setTimeout(() => bip(2093, 0.18, 0.5), d));
+  else if (st.phase === "rest") { bip(1319, 0.45, 0.5); setTimeout(() => bip(1047, 0.6, 0.5), 480); }
   T("t-pause").textContent = "Pause"; run.paused = false;
   tick();
 }
@@ -578,7 +579,7 @@ function tick() {
   const ms = run.end - performance.now(), sec = Math.max(0, Math.ceil(ms / 1000));
   if (sec !== run.lastSec) {
     T("t-time").textContent = sec;
-    if (sec > 0 && sec <= 3 && run.lastSec !== null) bip(784, 0.15, 0.45);
+    if (sec > 0 && sec <= 3 && run.lastSec !== null) bip(1760, 0.2, 0.5);
     run.lastSec = sec;
   }
   if (ms <= 0) { suivant(); return; }
