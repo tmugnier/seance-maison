@@ -133,7 +133,9 @@ nav button[aria-selected="true"] { color: var(--accent); }
   padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
 #timer[data-phase="effort"] { background: var(--accent-soft); }
 #timer[data-phase="rest"] { background: var(--rest-soft); }
-.t-top { display: flex; justify-content: space-between; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.t-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.t-music { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: .85rem; }
+.t-music[aria-pressed="false"] { color: var(--muted); }
 .t-mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; min-height: 0; }
 .t-phase { font-weight: 800; letter-spacing: 0.14em; font-size: 1rem; padding: 6px 14px; border-radius: 999px; background: var(--fg); color: var(--bg); }
 #timer[data-phase="effort"] .t-phase { background: var(--accent); color: var(--on-color); }
@@ -181,7 +183,7 @@ nav button[aria-selected="true"] { color: var(--accent); }
 <div id="toast" class="toast" role="status" hidden></div>
 
 <div id="timer" hidden data-phase="prep">
-  <div class="t-top"><span id="t-seance">Pecs</span><span id="t-round">Tour 1/2</span></div>
+  <div class="t-top"><span id="t-seance">Pecs</span><button id="t-music" class="t-music" aria-pressed="true">🎵 On</button><span id="t-round">Tour 1/2</span></div>
   <div class="t-mid">
     <span class="t-phase" id="t-phase">PRÉPARE-TOI</span>
     <p class="t-name" id="t-name">Pompes classiques</p>
@@ -528,6 +530,78 @@ function debloquerSon() {
 }
 function couperMuet() { try { muet && muet.pause(); } catch (e) {} }
 
+/* ---------- Ambiance musicale (générée, discrète) ----------
+   Effort : rythme 128 BPM (grosse caisse, charleston, basse) · Récup : nappes d'accords calmes.
+   Volume bas pour ne pas écraser la musique de l'utilisateur ; on/off avec le bouton 🎵 du timer. */
+const ambiance = (() => {
+  let mode = null, master = null, boucleId = null, nappeId = null, nextT = 0, pas = 0, bruit = null;
+  let on = true; try { on = localStorage.getItem("musique") !== "off"; } catch (e) {}
+  const actif = () => on;
+  function prep() {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (!master) { master = audio.createGain(); master.gain.value = 0.12; master.connect(audio.destination); }
+  }
+  function kick(t) {
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+    g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    o.connect(g).connect(master); o.start(t); o.stop(t + 0.26);
+  }
+  function charleston(t) {
+    if (!bruit) {
+      bruit = audio.createBuffer(1, Math.floor(audio.sampleRate * 0.05), audio.sampleRate);
+      const d = bruit.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const s = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+    s.buffer = bruit; f.type = "highpass"; f.frequency.value = 7000;
+    g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    s.connect(f).connect(g).connect(master); s.start(t);
+  }
+  const BASSE = [55, 55, 65.4, 49]; // la, la, do, sol
+  function basse(t, f) {
+    const o = audio.createOscillator(), fl = audio.createBiquadFilter(), g = audio.createGain();
+    o.type = "sawtooth"; o.frequency.value = f; fl.type = "lowpass"; fl.frequency.value = 600;
+    g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    o.connect(fl).connect(g).connect(master); o.start(t); o.stop(t + 0.21);
+  }
+  function boucle() {
+    const croche = 60 / 128 / 2;
+    while (nextT < audio.currentTime + 0.12) {
+      if (pas % 2 === 0) kick(nextT); else charleston(nextT);
+      basse(nextT, BASSE[Math.floor(pas / 8) % 4]);
+      nextT += croche; pas++;
+    }
+  }
+  const ACCORDS = [[220, 261.6, 329.6, 392], [174.6, 220, 261.6, 329.6], [196, 246.9, 293.7, 392], [164.8, 207.7, 246.9, 329.6]];
+  function accord(i) {
+    const t = audio.currentTime, g = audio.createGain(), fl = audio.createBiquadFilter();
+    fl.type = "lowpass"; fl.frequency.value = 900;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 1.2);
+    g.gain.setValueAtTime(0.22, t + 3); g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5);
+    fl.connect(g).connect(master);
+    ACCORDS[i % 4].forEach(f => {
+      const o = audio.createOscillator(); o.type = "triangle"; o.frequency.value = f; o.detune.value = Math.random() * 10 - 5;
+      o.connect(fl); o.start(t); o.stop(t + 4.6);
+    });
+  }
+  function stop() { clearInterval(boucleId); clearInterval(nappeId); boucleId = nappeId = null; mode = null; }
+  function jouer(m) {
+    if (!actif()) { stop(); return; }
+    if (m === mode) return;
+    stop(); prep(); mode = m;
+    if (m === "effort") { nextT = audio.currentTime + 0.05; pas = 0; boucleId = setInterval(boucle, 25); }
+    else { let i = 0; accord(i++); nappeId = setInterval(() => accord(i++), 4000); }
+  }
+  function basculer() {
+    const v = on = !on;
+    try { localStorage.setItem("musique", v ? "on" : "off"); } catch (e) {}
+    if (!v) stop();
+    return v;
+  }
+  return { jouer, stop, actif, basculer };
+})();
+function majBoutonMusique() { const b = document.getElementById("t-music"); if (b) { b.textContent = ambiance.actif() ? "🎵 On" : "🎵 Off"; b.setAttribute("aria-pressed", ambiance.actif()); } }
+
 /* ---------- Timer ---------- */
 const T = id => document.getElementById(id);
 let run = null, wake = null;
@@ -553,6 +627,7 @@ function demarrerEtape() {
   run.end = performance.now() + st.sec * 1000; run.lastSec = null;
   const s = run.s, c = cfg(s), ex = s.exos[st.ex];
   T("timer").dataset.phase = st.phase;
+  ambiance.jouer(st.phase === "effort" ? "effort" : "chill");
   T("t-seance").textContent = s.nom;
   T("t-round").textContent = "Tour " + st.tour + "/" + c.tours + " · Exo " + (st.ex + 1) + "/" + s.exos.length;
   T("t-phase").textContent = st.phase === "effort" ? "EFFORT" : st.phase === "rest" ? "RÉCUP" : st.phase === "warm" ? "ÉCHAUFFEMENT" : "PRÉPARE-TOI";
@@ -593,7 +668,7 @@ function suivant() {
 }
 function finir() {
   const s = run.s, duree = Math.round((Date.now() - run.debut) / 1000);
-  decalage = 0; ajouter(s.id, 1);
+  decalage = 0; ajouter(s.id, 1); ambiance.stop();
   bip(1046, 0.2, 0.4); setTimeout(() => bip(1318, 0.4, 0.4), 220);
   T("timer").dataset.phase = "rest";
   T("t-phase").textContent = "TERMINÉ"; T("t-name").textContent = s.nom + " ✅";
@@ -606,7 +681,7 @@ function finir() {
 }
 function fermer() {
   if (run) cancelAnimationFrame(run.raf);
-  couperMuet();
+  couperMuet(); ambiance.stop();
   run = null; T("timer").hidden = true; T("t-cancel").hidden = false; T("t-quit").textContent = "Quitter la séance";
   try { wake && wake.release(); } catch (e) {} wake = null;
 }
@@ -632,6 +707,11 @@ T("t-back").onclick = () => {
 T("t-stop").onclick = () => { if (!run) return; if (!run.paused) T("t-pause").click(); T("t-btns").hidden = true; T("t-confirm").hidden = false; };
 T("t-cancel").onclick = () => { T("t-confirm").hidden = true; T("t-btns").hidden = false; T("t-pause").click(); };
 T("t-quit").onclick = fermer;
+T("t-music").onclick = () => {
+  ambiance.basculer(); majBoutonMusique();
+  if (run && !run.fini && ambiance.actif()) ambiance.jouer(run.steps[run.i].phase === "effort" ? "effort" : "chill");
+};
+majBoutonMusique();
 document.addEventListener("visibilitychange", () => { if (run && !document.hidden) { garderEcran(); try { audio && audio.resume(); } catch (e) {} } });
 T("timer").addEventListener("pointerdown", () => { try { audio && audio.state !== "running" && audio.resume(); } catch (e) {} });
 
