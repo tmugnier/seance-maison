@@ -76,7 +76,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mini button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .85rem; }
 
 /* Plan trail (Aujourd'hui + catégorie Trail) */
-.plan { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin: 0 0 16px; font-size: .95rem; }
+.plan { display: flex; flex-direction: column; gap: 4px; width: 100%; box-sizing: border-box; text-align: left; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin: 0 0 16px; font-size: .95rem; }
 .plan-k { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--accent); }
 .plan h2 { font-size: 1.1rem; }
 .plan-s { color: var(--muted); font-size: .9rem; }
@@ -136,11 +136,43 @@ ol.exos p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 15;
   background: var(--fg); color: var(--bg); padding: 12px 18px; border-radius: 999px; font-weight: 600; font-size: .95rem; max-width: calc(100% - 32px); text-align: center; }
 
+/* Programme (plan trail : résumé, pilotage, frise, graphique) */
+.pilote { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.pilote .ghost { padding: 12px 14px; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.pilote .ghost small { color: var(--muted); font-weight: 500; font-size: .82rem; }
+.pilote .ghost.sure { background: #D63A2F; border-color: #D63A2F; color: #FFFFFF; }
+.pilote .ghost.sure small { color: #FFFFFF; }
+.phase-t { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 22px 0 8px; }
+details.sem { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 8px; scroll-margin-top: 16px; }
+details.sem[data-etat="encours"] { border: 2px solid var(--accent); background: var(--accent-soft); }
+details.sem summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+details.sem summary::-webkit-details-marker { display: none; }
+.sem-h { display: flex; align-items: baseline; gap: 8px; }
+.sem-h b { font-family: var(--display); font-size: 1.05rem; }
+.sem-h .dates { color: var(--muted); font-size: .85rem; flex: 1; min-width: 0; }
+.etat { font-size: .78rem; font-weight: 700; white-space: nowrap; color: var(--muted); }
+.etat.ok { color: var(--rest); }
+.etat.encours { color: var(--accent); }
+.sem-sl { font-size: .92rem; }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.badge { font-size: .74rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--fg); white-space: nowrap; }
+.badge.leg { background: var(--rest-soft); border-color: transparent; color: var(--rest); }
+.sem-d { padding: 0 14px 14px; font-size: .9rem; }
+.sem-d p { margin: 0 0 8px; }
+.sem-d ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--muted); }
+.graph { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.graph svg { display: block; width: 100%; height: auto; }
+.graph .b-n { fill: var(--muted); opacity: .7; }
+.graph .b-l { fill: var(--muted); opacity: .3; }
+.graph .b-c { fill: var(--accent); }
+.graph text { fill: var(--muted); font: 600 7px var(--body); }
+.graph .axe { stroke: var(--line); stroke-width: 1; }
+
 /* Bottom nav */
-nav { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface); border-top: 1px solid var(--line);
+nav { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--surface); border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
 nav button { appearance: none; border: 0; background: none; color: var(--muted); font: 500 0.75rem var(--body); letter-spacing: 0.02em;
-  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 12px; }
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 12px; min-width: 0; white-space: nowrap; }
 nav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 nav button[aria-selected="true"] { color: var(--accent); }
 
@@ -197,12 +229,17 @@ nav button[aria-selected="true"] { color: var(--accent); }
     <div class="bar"><i id="week-bar" style="width:0%"></i></div>
     <div class="stack" id="week-list"></div>
   </section>
+
+  <section data-tab="programme" hidden>
+    <div id="prog-view"></div>
+  </section>
 </main>
 
 <nav role="tablist" aria-label="Navigation">
   <button id="nav-aujourdhui" role="tab" data-go="aujourdhui" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Aujourd'hui</button>
   <button id="nav-activites" role="tab" data-go="activites" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Activités</button>
   <button id="nav-semaine" role="tab" data-go="semaine" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Semaine</button>
+  <button id="nav-programme" role="tab" data-go="programme" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M5 21c0-4 4-5 7-6s5-3 5-6"/><circle cx="5" cy="21" r="1"/><path d="M17 9V3l4 1.5L17 6"/></svg>Programme</button>
 </nav>
 
 <div id="toast" class="toast" role="status" hidden></div>
@@ -470,19 +507,34 @@ const parCat = c => ACTIVITES.filter(a => a.cat === c);
    Avant le début : semaine 1. Après la dernière : plan terminé (objectifs "apres"). */
 function semainePlan(d = new Date()) {
   const [y, m, j] = PLAN_TRAIL.debut.split("-").map(Number);
-  const jours = Math.round((lundi(d) - new Date(y, m - 1, j)) / 86400000); // arrondi : changements d'heure
-  const total = PLAN_TRAIL.semaines.length, n = Math.floor(jours / 7) + 1;
-  if (n < 1) return { n: 1, total, statut: "avant", ligne: PLAN_TRAIL.semaines[0] };
-  if (n > total) return { n: total, total, statut: "fini", ligne: null };
-  return { n, total, statut: "en cours", ligne: PLAN_TRAIL.semaines[n - 1] };
+  const l = lundi(d), jours = Math.round((l - new Date(y, m - 1, j)) / 86400000); // arrondi : changements d'heure
+  const total = PLAN_TRAIL.semaines.length, base = Math.floor(jours / 7) + 1;
+  if (base < 1) return { n: 1, brut: base, total, statut: "avant", ligne: PLAN_TRAIL.semaines[0] };
+  // décalages ("Refaire cette semaine"…) qui s'appliquent à partir de leur lundi
+  const cle = cleDe(l), dec = decalagesPlan().reduce((s, x) => s + (x.depuis <= cle ? x.n : 0), 0);
+  const n = Math.max(1, base - dec); // jamais sous S1
+  if (n > total) return { n: total, brut: n, total, statut: "fini", ligne: null };
+  return { n, brut: n, total, statut: "en cours", ligne: PLAN_TRAIL.semaines[n - 1] };
+}
+/* Décalages du plan, synchronisés comme un réglage : etat.reglages["plan-trail"] = { decalages: [{ depuis: "AAAA-MM-JJ", n }] }
+   daté dans majReglages comme les autres réglages, donc fusionné sans code spécial (aucune activité ne s'appelle "plan-trail"). */
+const CLE_PLAN = "plan-trail";
+function decalagesPlan() {
+  const r = etat && etat.reglages && etat.reglages[CLE_PLAN];
+  return r && Array.isArray(r.decalages) ? r.decalages.filter(x => x && typeof x.depuis === "string" && x.n > 0) : [];
+}
+const decalageTotal = () => decalagesPlan().reduce((s, x) => s + x.n, 0);
+// Objectifs fixés par une ligne du plan (ou par "apres")
+function objectifsLigne(l, duPlan = true) {
+  return { "renfo-genou": l.renfoGenou, "renfo-trail": l.renfoTrail, "trail-footing": l.footing,
+    "trail-sortie-longue": duPlan ? 1 : l.sortieLongue, course: l.fract, velo: l.velo };
 }
 // Objectifs de la semaine réglés par le plan (les autres activités : parSemaine)
 function objectifsPlan() {
-  const p = semainePlan(), l = p.ligne || PLAN_TRAIL.apres;
+  const p = semainePlan();
   // avant le début : rien d'imposé (vélo et course gardent leur fréquence habituelle)
   if (p.statut === "avant") return { "renfo-genou": 0, "renfo-trail": 0, "trail-footing": 0, "trail-sortie-longue": 0 };
-  return { "renfo-genou": l.renfoGenou, "renfo-trail": l.renfoTrail, "trail-footing": l.footing,
-    "trail-sortie-longue": p.ligne ? 1 : l.sortieLongue, course: l.fract, velo: l.velo };
+  return p.ligne ? objectifsLigne(p.ligne) : objectifsLigne(PLAN_TRAIL.apres, false);
 }
 function objectif(a) {
   const o = objectifsPlan();
@@ -641,7 +693,8 @@ async function connecterCloud() {
 /* ---------- Outils ---------- */
 function cfg(a) { return Object.assign({ effort: a.effort, recup: a.recup, tours: a.tours }, etat.reglages[a.id] || {}); }
 function lundi(d = new Date()) { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
-function cleSemaine() { const l = lundi(); return l.getFullYear() + "-" + String(l.getMonth()+1).padStart(2,"0") + "-" + String(l.getDate()).padStart(2,"0"); }
+function cleDe(d) { const l = lundi(d); return l.getFullYear() + "-" + String(l.getMonth()+1).padStart(2,"0") + "-" + String(l.getDate()).padStart(2,"0"); }
+function cleSemaine() { return cleDe(new Date()); }
 function semaine() { return etat.semaines[cleSemaine()] || {}; }
 const nbFait = id => semaine()[id] || 0;
 // fait cette semaine (une activité hors programme cette semaine : faite dès 1 fois)
@@ -825,7 +878,137 @@ function ajuster(key, d) {
   save(); renderTout();
 }
 
-function renderTout() { renderAujourdhui(); renderSemaine(); renderActivites(); }
+/* ---------- Programme : résumé, pilotage du plan, frise des semaines, graphique ---------- */
+const JOURS_FR = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+const jjmm = d => String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+const plusJours = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+// Semaines du calendrier couvertes par le plan, dans l'ordre : [{ lundi, cle, n }] (une semaine refaite apparaît 2 fois)
+function calendrierPlan() {
+  const [y, m, j] = PLAN_TRAIL.debut.split("-").map(Number), out = [];
+  for (let i = 0, d = new Date(y, m - 1, j); i < 200; i++, d = plusJours(d, 7)) {
+    const p = semainePlan(d);
+    if (p.statut === "fini") break;
+    out.push({ lundi: d, cle: cleDe(d), n: p.n });
+  }
+  return out;
+}
+// Score des activités trail prévues pour une semaine du calendrier (selon etat.semaines de ce lundi)
+function scoreTrail(cle, ligne) {
+  const s = etat.semaines[cle] || {}, o = objectifsLigne(ligne);
+  return parCat("trail").reduce((r, a) => { const obj = o[a.id] || 0; r.total += obj; r.fait += Math.min(s[a.id] || 0, obj); return r; }, { fait: 0, total: 0 });
+}
+const legere = l => /légère/i.test(l.phase);
+function slCourt(t) { // "6,5 km · D+ 50 m" à partir du texte de la sortie longue
+  const km = t.match(/(\d+(?:,\d+)?)\s*km/), dp = t.match(/D\+\s*(\d+)\s*m/);
+  return km ? km[1] + " km" + (dp ? " · D+ " + dp[1] + " m" : /plat/.test(t) ? " · plat" : "") : t;
+}
+const kmSL = t => { const km = t.match(/(\d+(?:,\d+)?)\s*km/); return km ? parseFloat(km[1].replace(",", ".")) : 0; };
+function badgesLigne(l) {
+  const b = [];
+  if (legere(l)) b.push(`<span class="badge leg">légère</span>`);
+  const x = n => n > 1 ? " ×" + n : "";
+  if (l.footing) b.push(`<span class="badge">Footing${x(l.footing)}</span>`);
+  if (l.renfoGenou) b.push(`<span class="badge">Renfo genou${x(l.renfoGenou)}</span>`);
+  if (l.renfoTrail) b.push(`<span class="badge">Renfo trail${x(l.renfoTrail)}</span>`);
+  if (l.fract) b.push(`<span class="badge">Fractionné${x(l.fract)}</span>`);
+  if (l.velo) b.push(`<span class="badge">Vélo${x(l.velo)}</span>`);
+  return `<div class="badges">${b.join("")}</div>`;
+}
+// Ce que donnerait la semaine prochaine, et les décalages possibles (jamais sous S1)
+function pilotage() {
+  const p = semainePlan(), suivant = plusJours(lundi(), 7), brutSuivant = semainePlan(suivant).brut;
+  if (p.statut !== "en cours") return null;
+  return { n: p.n, suivant: cleDe(suivant), refaire: brutSuivant - p.n, revenir: p.n >= 2 ? brutSuivant - (p.n - 1) : 0 };
+}
+function decaler(type) {
+  const r = Object.assign({ decalages: [] }, etat.reglages[CLE_PLAN] || {}), dec = decalagesPlan().slice(), pl = pilotage();
+  if (type === "annuler") { if (!dec.length) return; dec.pop(); }
+  else {
+    const k = pl && pl[type]; if (!k || k <= 0) return;
+    dec.push({ depuis: pl.suivant, n: k });
+  }
+  etat.reglages[CLE_PLAN] = Object.assign(r, { decalages: dec });
+  etat.majReglages = etat.majReglages || {}; etat.majReglages[CLE_PLAN] = new Date().toISOString();
+  save(); renderTout();
+  const sp = semainePlan(plusJours(lundi(), 7));
+  toast(type === "annuler" ? "Dernier décalage annulé" : `Plan décalé : la semaine prochaine sera la S${sp.n}`);
+}
+let piloteTimer = null;
+function piloter(b) { // confirmation en deux appuis, comme retirer()
+  if (!b.classList.contains("sure")) {
+    document.querySelectorAll(".pilote .sure").forEach(x => { x.classList.remove("sure"); x.querySelector("b").textContent = x.dataset.lab; });
+    b.classList.add("sure"); b.querySelector("b").textContent = "Confirmer : " + b.dataset.lab.toLowerCase();
+    clearTimeout(piloteTimer);
+    piloteTimer = setTimeout(() => { b.classList.remove("sure"); b.querySelector("b").textContent = b.dataset.lab; }, 3000);
+    return;
+  }
+  decaler(b.dataset.pilote);
+}
+function graphiqueSL(nCourant) {
+  const sem = PLAN_TRAIL.semaines, max = Math.max(...sem.map(l => kmSL(l.sortieLongue)), 1);
+  const W = 260, H = 110, bas = 92, haut = 12, pas = W / sem.length, larg = pas * 0.7;
+  const barres = sem.map((l, i) => {
+    const km = kmSL(l.sortieLongue), h = (bas - haut) * km / max, x = i * pas + (pas - larg) / 2;
+    const cls = i + 1 === nCourant ? "b-c" : legere(l) ? "b-l" : "b-n";
+    return `<rect class="${cls}" x="${x.toFixed(1)}" y="${(bas - h).toFixed(1)}" width="${larg.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5"><title>S${i + 1} : ${String(km).replace(".", ",")} km</title></rect>`;
+  }).join("");
+  const reperes = [1, 9, 18, 26].filter(k => k <= sem.length).map(k => `<text x="${((k - 0.5) * pas).toFixed(1)}" y="${bas + 11}" text-anchor="middle">S${k}</text>`).join("");
+  return `<div class="graph"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sortie longue par semaine, de ${String(kmSL(sem[0].sortieLongue)).replace(".", ",")} à ${String(max).replace(".", ",")} km">
+    <line class="axe" x1="0" y1="${bas}" x2="${W}" y2="${bas}"/><text x="0" y="8">${String(max).replace(".", ",")} km</text>${barres}${reperes}</svg>
+    </div>`;
+}
+function renderProgramme(initial = false) {
+  const el = document.getElementById("prog-view"); if (!el) return;
+  // réaffichage (synchro, case cochée…) : on garde les cartes que Tom a dépliées ; à l'ouverture de l'onglet : la semaine en cours
+  const garder = !initial && el.dataset.rendu ? new Set([...el.querySelectorAll("details.sem[open]")].map(d => d.id)) : null;
+  const p = semainePlan(), cal = calendrierPlan(), auj = cleSemaine(), sem = PLAN_TRAIL.semaines;
+  // état de chaque semaine du plan (à partir de ses semaines de calendrier)
+  const infos = sem.map((l, i) => {
+    const occ = cal.filter(o => o.n === i + 1), der = occ[occ.length - 1];
+    let etatS = "avenir", sc = null;
+    if (occ.some(o => o.cle === auj)) { etatS = "encours"; sc = scoreTrail(auj, l); }
+    else if (der && der.cle < auj) { sc = scoreTrail(der.cle, l); etatS = sc.fait >= sc.total ? "ok" : "ko"; }
+    return { l, n: i + 1, occ, etatS, sc };
+  });
+  const passees = infos.filter(x => x.etatS === "ok" || x.etatS === "ko"), reussies = passees.filter(x => x.etatS === "ok").length;
+  const fin = cal.length ? plusJours(cal[cal.length - 1].lundi, 6) : null;
+  const avance = p.statut === "fini" ? 1 : p.statut === "avant" ? 0 : (p.n - 1) / p.total;
+  const dec = decalageTotal(), pl = pilotage(), ouverte = p.statut === "avant" ? 1 : p.statut === "en cours" ? p.n : 0;
+  const bouton = (type, lab, aide) => `<button class="ghost" data-pilote="${type}" data-lab="${esc(lab)}"><b>${esc(lab)}</b><small>${esc(aide)}</small></button>`;
+  const btns = [];
+  if (pl && pl.refaire > 0) btns.push(bouton("refaire", "Refaire cette semaine", `Genou à 4-5/10 : encore S${pl.n} lundi prochain`));
+  if (pl && pl.revenir > 0) btns.push(bouton("revenir", "Revenir d'une semaine", `Plus de 5/10 : S${pl.n - 1} lundi prochain`));
+  if (decalagesPlan().length) { const d = decalagesPlan().slice(-1)[0], [, mm, jj] = d.depuis.split("-");
+    btns.push(bouton("annuler", "Annuler le dernier décalage", `+${d.n} sem. depuis le ${jj}/${mm}`)); }
+  const resume = [fin ? `Fin le ${jjmm(fin)}/${fin.getFullYear()}` : "", passees.length ? `${reussies}/${passees.length} semaines réussies` : "", dec ? `décalé de ${dec} sem.` : ""].filter(Boolean).join(" · ");
+  let html = `<h1>Programme</h1>
+    <div class="plan"><h2>${esc(titrePlan())}</h2>
+      <div class="bar" style="margin:6px 0 4px"><i style="width:${Math.round(avance * 100)}%"></i></div>
+      <span class="plan-s">${resume}</span></div>
+    ${btns.length ? `<div class="pilote">${btns.join("")}</div>` : ""}`;
+  let groupe = null;
+  infos.forEach(x => {
+    const g = x.l.phase.split(" · ")[0];
+    if (g !== groupe) { groupe = g; const titre = (sem.find(l => l.phase.startsWith(g) && !legere(l)) || x.l).phase; html += `<div class="phase-t">${esc(titre)}</div>`; }
+    const d1 = x.occ[0] ? x.occ[0].lundi : null, d2 = x.occ.length ? plusJours(x.occ[x.occ.length - 1].lundi, 6) : null;
+    const etatTxt = { ok: "✓ réussie", ko: `incomplète · ${x.sc && x.sc.fait}/${x.sc && x.sc.total}`, encours: `en cours · ${x.sc && x.sc.fait}/${x.sc && x.sc.total}`, avenir: "" }[x.etatS];
+    html += `<details class="sem" id="sem-${x.n}" data-etat="${x.etatS}"${(garder ? garder.has("sem-" + x.n) : x.n === ouverte) ? " open" : ""}><summary>
+      <div class="sem-h"><b>S${x.n}</b><span class="dates">${d1 ? `lun. ${jjmm(d1)} → dim. ${jjmm(d2)}` : ""}${x.occ.length > 1 ? " · refaite" : ""}</span><span class="etat ${x.etatS}">${etatTxt}</span></div>
+      <div class="sem-sl"><b>Sortie longue :</b> ${esc(slCourt(x.l.sortieLongue))}</div>${badgesLigne(x.l)}</summary>
+      <div class="sem-d"><p>${esc(x.l.consigne)}</p><ul>
+        ${/\(|acultatif|sinon/i.test(x.l.sortieLongue) ?`<li>Sortie longue : ${esc(x.l.sortieLongue)}</li>` : ""}
+        ${x.l.footing ? `<li>Footing : ${esc(x.l.footingInfo)}</li>` : ""}
+        ${x.l.velo ? `<li>Vélo : ${esc(x.l.veloInfo)}</li>` : ""}</ul></div></details>`;
+  });
+  html += `<div class="label">Sortie longue, semaine par semaine</div>${graphiqueSL(p.statut === "en cours" ? p.n : 0)}`;
+  el.innerHTML = html; el.dataset.rendu = "1";
+}
+function allerSemaineCourante() {
+  const p = semainePlan(), c = document.getElementById("sem-" + (p.statut === "en cours" ? p.n : 1));
+  if (c && p.statut !== "fini") c.scrollIntoView({ block: "start" });
+}
+
+function renderTout() { renderAujourdhui(); renderSemaine(); renderActivites(); renderProgramme(); }
 
 /* ---------- Son ---------- */
 let audio = null;
@@ -1140,7 +1323,7 @@ document.addEventListener("visibilitychange", () => { if (run && !document.hidde
 T("timer").addEventListener("pointerdown", () => { try { audio && audio.state !== "running" && audio.resume(); } catch (e) {} });
 
 /* ---------- Navigation ---------- */
-const TABS = ["aujourdhui", "activites", "semaine"];
+const TABS = ["aujourdhui", "activites", "semaine", "programme"];
 function show(name) {
   if (!TABS.includes(name)) name = "aujourdhui";
   document.querySelectorAll("[data-tab]").forEach(s => s.hidden = s.dataset.tab !== name);
@@ -1148,6 +1331,7 @@ function show(name) {
   if (name === "activites") { vue = { cat: null, id: null }; renderActivites(); }
   try { localStorage.setItem("tab", name); } catch (e) {}
   window.scrollTo(0, 0);
+  if (name === "programme") { renderProgramme(true); allerSemaineCourante(); } // ouvre sur la semaine en cours
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
@@ -1157,6 +1341,7 @@ document.addEventListener("click", e => {
   else if (d.done) { decalage = 0; ajouter(d.done, 1); }
   else if (d.toggle) { const a = act(d.toggle); ajouter(a.id, complet(a) ? -1 : 1); }
   else if (d.del || d.moins) retirer(b);
+  else if (d.pilote) piloter(b);
   else if (d.autre) { decalage++; renderAujourdhui(); }
   else if (d.trail) { show("activites"); vue = { cat: "trail", id: null }; renderActivites(); }
   else if (d.vue !== undefined) { vue = { cat: d.vue || null, id: null }; renderActivites(); window.scrollTo(0, 0); }
