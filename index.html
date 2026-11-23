@@ -876,7 +876,7 @@ function renderAujourdhui() {
   document.getElementById("cpt-total").textContent = total;
   const todo = tout.filter(aFaire), faits = tout.filter(complet), autres = tout.filter(a => !auProgramme(a) && !complet(a));
   document.getElementById("a-faire").innerHTML = todo.length ? todo.map(ligne).join("")
-    : `<div class="empty" style="border:0;background:none"><b>Semaine bouclée 🎉</b>Repos bien mérité jusqu'à lundi.</div>`;
+    : `<div class="empty" style="border:0;background:none"><b>Semaine bouclée 🎉</b></div>`;
   document.getElementById("faits").innerHTML = faits.map(ligne).join("");
   document.getElementById("l-fait").hidden = document.getElementById("faits").hidden = !faits.length;
   document.getElementById("autres").innerHTML = autres.map(ligne).join("");
@@ -1218,11 +1218,8 @@ function demarrerEtape() {
   if (st.phase === "effort") {
     const nx = run.steps[nextIdx];
     T("t-next").innerHTML = nx ? "Ensuite : <b>" + esc(s.exos[nx.ex][0]) + "</b>" : "<b>Dernier exercice !</b>";
-  } else T("t-next").innerHTML = st.phase === "rest" ? esc(s.recupTxt || "Prochain exercice") : esc(ex[1]);
-  if (st.phase === "warm") {
-    T("t-name").textContent = "Échauffement";
-    T("t-next").textContent = s.echauffement || "Cercles de bras, rotations d'épaules, quelques pompes faciles.";
-  }
+  } else T("t-next").textContent = ""; // pas de consigne : Tom connaît ses exercices
+  if (st.phase === "warm") T("t-name").textContent = "Échauffement";
   // Effort : double bip aigu · Récup : bip grave long
   // Voix (après les bips pour ne pas se chevaucher)
   if (st.phase === "warm") dire("Échauffement");
@@ -1259,7 +1256,7 @@ function finir() {
   T("timer").dataset.phase = "rest"; montrerPhoto(null);
   T("t-phase").textContent = "TERMINÉ"; T("t-name").textContent = s.nom + " ✅";
   T("t-time").textContent = "Bravo";
-  T("t-next").textContent = "Séance cochée pour cette semaine.";
+  T("t-next").textContent = "";
   T("t-round").textContent = fmt(duree);
   T("t-btns").hidden = true; T("t-confirm").hidden = false;
   T("t-cancel").hidden = true; T("t-quit").textContent = "Retour";
