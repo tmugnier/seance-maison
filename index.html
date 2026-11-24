@@ -181,7 +181,44 @@ details.autres[open] summary::after { content: " ⌄"; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 15;
   background: var(--fg); color: var(--bg); padding: 12px 18px; border-radius: 999px; font-weight: 600; font-size: .95rem; max-width: calc(100% - 32px); text-align: center; }
 
-/* Programme (plan trail : résumé, pilotage, frise, graphique) */
+/* Programme visuel : anneau, semaine en grand, grille des 26 semaines */
+.ph { position: relative; display: flex; align-items: center; gap: 16px; margin: 4px 0 16px; }
+.anneau { width: 84px; height: 84px; flex: none; }
+.a-fond { fill: none; stroke: var(--line); stroke-width: 8; }
+.a-plein { fill: none; stroke: var(--accent); stroke-width: 8; stroke-linecap: round; }
+.ph-c { position: absolute; left: 0; top: 0; width: 84px; height: 84px; display: flex; align-items: baseline; justify-content: center; padding-top: 28px; box-sizing: border-box; }
+.ph-c b { font: 800 1.45rem var(--display); }
+.ph-c small { color: var(--muted); font-weight: 600; }
+.ph-t b { display: block; font: 600 1.15rem var(--display); }
+.ph-t small { color: var(--muted); }
+.pd { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 14px; }
+.pd.cours { border-color: var(--accent); }
+.pd-h { display: flex; align-items: baseline; gap: 8px; color: var(--muted); font-size: .85rem; }
+.pd-h b { font: 800 1rem var(--display); color: var(--fg); }
+.pd-sl { display: flex; align-items: baseline; gap: 8px; margin: 6px 0 12px; }
+.pd-sl b { font: 800 2.6rem/1 var(--display); color: var(--accent); }
+.pd-sl small { color: var(--muted); font-weight: 600; }
+.pd-ok { color: var(--rest); font-weight: 800; font-size: 1.4rem; }
+.pd-t { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
+.pt { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.pt.ok { background: var(--rest-soft); border-color: var(--rest); }
+.pt-i svg { width: 20px; height: 20px; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pt.ok .pt-i svg { stroke: var(--rest); }
+.pt b { font: 800 1.15rem var(--display); }
+.pt small { color: var(--muted); font-size: .78rem; font-weight: 600; }
+.pg-t { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 18px 0 8px; }
+.pg { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+.sq { height: 58px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; }
+.sq small { font-size: .68rem; color: var(--muted); font-weight: 700; }
+.sq b { font: 800 1.15rem var(--display); }
+.sq.lg { border-style: dashed; }
+.sq.ok { background: var(--rest-soft); border-color: var(--rest); }
+.sq.ok b, .sq.ok small { color: var(--rest); }
+.sq.ko { opacity: .55; }
+.sq.encours { background: var(--accent); border-color: var(--accent); }
+.sq.encours b, .sq.encours small { color: var(--on-color); }
+.sq.sel { outline: 2px solid var(--fg); outline-offset: 2px; }
+/* (ancien) Programme : frise */
 .pilote { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .pilote .ghost { padding: 12px 14px; text-align: left; display: flex; flex-direction: column; gap: 2px; }
 .pilote .ghost small { color: var(--muted); font-weight: 500; font-size: .82rem; }
@@ -968,48 +1005,61 @@ function badgesLigne(l) {
   if (l.velo) b.push(`<span class="badge">Vélo${x(l.velo)}</span>`);
   return `<div class="badges">${b.join("")}</div>`;
 }
-function renderProgramme(initial = false) {
-  const el = document.getElementById("prog-view"); if (!el) return;
-  // réaffichage (synchro, case cochée…) : on garde les cartes que Tom a dépliées ; à l'ouverture de l'onglet : la semaine en cours
-  const garder = !initial && el.dataset.rendu ? new Set([...el.querySelectorAll("details.sem[open]")].map(d => d.id)) : null;
-  const p = semainePlan(), cal = calendrierPlan(), auj = cleSemaine(), sem = PLAN_TRAIL.semaines;
-  // état de chaque semaine du plan (à partir de ses semaines de calendrier)
-  const infos = sem.map((l, i) => {
+// Programme visuel : anneau d'avancement, la semaine en cours en grand, grille des 26 semaines (appui = détail)
+let semChoisie = null;
+function infosSemaines() {
+  const p = semainePlan(), cal = calendrierPlan(), auj = cleSemaine();
+  return PLAN_TRAIL.semaines.map((l, i) => {
     const occ = cal.filter(o => o.n === i + 1), der = occ[occ.length - 1];
     let etatS = "avenir", sc = null;
     if (occ.some(o => o.cle === auj)) { etatS = "encours"; sc = scoreTrail(auj, l); }
     else if (der && der.cle < auj) { sc = scoreTrail(der.cle, l); etatS = sc.fait >= sc.total ? "ok" : "ko"; }
-    return { l, n: i + 1, occ, etatS, sc };
+    return { l, n: i + 1, occ, etatS, sc, p };
   });
-  const passees = infos.filter(x => x.etatS === "ok" || x.etatS === "ko"), reussies = passees.filter(x => x.etatS === "ok").length;
+}
+function detailSemaine(x) {
+  const l = x.l, d1 = x.occ[0] ? x.occ[0].lundi : null, d2 = x.occ.length ? plusJours(x.occ[x.occ.length - 1].lundi, 6) : null;
+  const courante = x.etatS === "encours";
+  const fait = id => courante ? Math.min(nbFait(id), objectifsLigne(l)[id] || 0) : null;
+  const tuile = (ico, titre, val, id, obj) => {
+    const f = fait(id), ok = f !== null && obj && f >= obj;
+    return `<div class="pt${ok ? " ok" : ""}"><span class="pt-i">${ico}</span><b>${esc(val)}</b><small>${esc(titre)}${f !== null && obj > 1 ? ` · ${f}/${obj}` : ok ? " ✓" : ""}</small></div>`;
+  };
+  const tuiles = [];
+  if (l.footing) tuiles.push(tuile(ICO_SORTIE["trail-footing"], l.footing > 1 ? `Footing ×${l.footing}` : "Footing", (l.footingInfo.match(/[\d,]+ km/) || [l.footingInfo])[0], "trail-footing", l.footing));
+  if (l.renfoGenou) tuiles.push(tuile('<svg viewBox="0 0 24 24"><path d="M6 5v14M18 5v14M3 8v8M21 8v8M6 12h12"/></svg>', "Renfo genou", "×" + l.renfoGenou, "renfo-genou", l.renfoGenou));
+  if (l.renfoTrail) tuiles.push(tuile('<svg viewBox="0 0 24 24"><path d="M6 5v14M18 5v14M3 8v8M21 8v8M6 12h12"/></svg>', "Renfo trail", "×" + l.renfoTrail, "renfo-trail", l.renfoTrail));
+  if (l.fract) tuiles.push(tuile(ICO_SORTIE.course, "Fractionné", "×" + l.fract, "course", l.fract));
+  if (l.velo) tuiles.push(tuile(ICO_SORTIE.velo, "Vélo", (l.veloInfo.match(/\d+ ?(min|h)/) || [l.veloInfo])[0], "velo", l.velo));
+  const slFait = fait("trail-sortie-longue");
+  return `<div class="pd${courante ? " cours" : ""}">
+    <div class="pd-h"><b>S${x.n}</b><span>${d1 ? `${jjmm(d1)} → ${jjmm(d2)}` : ""}</span>${legere(l) ? '<span class="leg">légère</span>' : ""}</div>
+    <div class="pd-sl">${slFait ? '<span class="pd-ok">✓</span>' : ""}<b>${esc(slCourt(l.sortieLongue).split(" · ")[0])}</b><small>Sortie longue${/plat/.test(l.sortieLongue) ? " · plat" : (l.sortieLongue.match(/D\+\s*\d+\s*m/) || [""])[0] ? " · " + l.sortieLongue.match(/D\+\s*\d+\s*m/)[0] : ""}</small></div>
+    <div class="pd-t">${tuiles.join("")}</div></div>`;
+}
+function renderProgramme() {
+  const el = document.getElementById("prog-view"); if (!el) return;
+  const infos = infosSemaines(), p = semainePlan(), cal = calendrierPlan(), total = PLAN_TRAIL.semaines.length;
+  const courante = p.statut === "en cours" ? p.n : p.statut === "avant" ? 1 : total;
+  if (!semChoisie) semChoisie = courante;
   const fin = cal.length ? plusJours(cal[cal.length - 1].lundi, 6) : null;
-  const avance = p.statut === "fini" ? 1 : p.statut === "avant" ? 0 : (p.n - 1) / p.total;
-  const dec = decalageTotal(), ouverte = p.statut === "avant" ? 1 : p.statut === "en cours" ? p.n : 0;
-  const resume = [fin ? `Fin le ${jjmm(fin)}/${fin.getFullYear()}` : "", passees.length ? `${reussies}/${passees.length} semaines réussies` : "", dec ? `décalé de ${dec} sem.` : ""].filter(Boolean).join(" · ");
-  let html = `<h1>Programme</h1>
-    <div class="plan"><h2>${esc(titrePlan())}</h2>
-      <div class="bar" style="margin:6px 0 4px"><i style="width:${Math.round(avance * 100)}%"></i></div>
-      <span class="plan-s">${resume}</span></div>`;
-  let groupe = null;
-  infos.forEach(x => {
-    const g = x.l.phase.split(" · ")[0];
-    if (g !== groupe) { groupe = g; const titre = (sem.find(l => l.phase.startsWith(g) && !legere(l)) || x.l).phase; html += `<div class="phase-t">${esc(titre)}</div>`; }
-    const d1 = x.occ[0] ? x.occ[0].lundi : null, d2 = x.occ.length ? plusJours(x.occ[x.occ.length - 1].lundi, 6) : null;
-    const etatTxt = { ok: "✓ réussie", ko: `incomplète · ${x.sc && x.sc.fait}/${x.sc && x.sc.total}`, encours: `en cours · ${x.sc && x.sc.fait}/${x.sc && x.sc.total}`, avenir: "" }[x.etatS];
-    html += `<details class="sem" id="sem-${x.n}" data-etat="${x.etatS}"${(garder ? garder.has("sem-" + x.n) : x.n === ouverte) ? " open" : ""}><summary>
-      <div class="sem-h"><b>S${x.n}</b><span class="dates">${d1 ? `lun. ${jjmm(d1)} → dim. ${jjmm(d2)}` : ""}${x.occ.length > 1 ? " · refaite" : ""}</span><span class="etat ${x.etatS}">${etatTxt}</span></div>
-      <div class="sem-sl"><b>Sortie longue :</b> ${esc(slCourt(x.l.sortieLongue))}</div>${badgesLigne(x.l)}</summary>
-      <div class="sem-d"><ul>
-        ${/\(|acultatif|sinon/i.test(x.l.sortieLongue) ?`<li>Sortie longue : ${esc(x.l.sortieLongue)}</li>` : ""}
-        ${x.l.footing ? `<li>Footing : ${esc(x.l.footingInfo)}</li>` : ""}
-        ${x.l.velo ? `<li>Vélo : ${esc(x.l.veloInfo)}</li>` : ""}</ul></div></details>`;
-  });
-  el.innerHTML = html; el.dataset.rendu = "1";
+  const avance = p.statut === "fini" ? 1 : p.statut === "avant" ? 0 : (p.n - 1) / total;
+  const C = 2 * Math.PI * 34;
+  const phase = (PLAN_TRAIL.semaines[courante - 1] || {}).phase || "";
+  const groupes = [];
+  infos.forEach(x => { const g = x.l.phase.split(" · ")[0]; if (!groupes.length || groupes[groupes.length - 1].g !== g) groupes.push({ g, xs: [] }); groupes[groupes.length - 1].xs.push(x); });
+  const nomPhase = g => ({ "Phase 1": "Genou", "Phase 2": "Volume", "Phase 3": "Dénivelé" }[g] || g);
+  el.innerHTML = `<h1>Programme</h1>
+    <div class="ph">
+      <svg class="anneau" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" class="a-fond"/><circle cx="40" cy="40" r="34" class="a-plein" stroke-dasharray="${(avance * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/></svg>
+      <div class="ph-c"><b>S${courante}</b><small>/${total}</small></div>
+      <div class="ph-t"><b>${esc(phase.split(" · ").slice(0, 2).join(" · ").replace(/^Phase (\d)/, "Phase $1"))}</b><small>${fin ? "Fin le " + jjmm(fin) + "/" + fin.getFullYear() : ""}</small></div>
+    </div>
+    <div id="p-detail">${detailSemaine(infos[semChoisie - 1])}</div>
+    ${groupes.map(gr => `<div class="pg-t">${esc(gr.g)} · ${esc(nomPhase(gr.g))}</div><div class="pg">${gr.xs.map(x =>
+      `<button class="sq ${x.etatS}${legere(x.l) ? " lg" : ""}${x.n === semChoisie ? " sel" : ""}" data-sem="${x.n}" aria-label="Semaine ${x.n}"><small>S${x.n}</small><b>${esc(slCourt(x.l.sortieLongue).split(" · ")[0].replace(" km", ""))}</b></button>`).join("")}</div>`).join("")}`;
 }
-function allerSemaineCourante() {
-  const p = semainePlan(), c = document.getElementById("sem-" + (p.statut === "en cours" ? p.n : 1));
-  if (c && p.statut !== "fini") c.scrollIntoView({ block: "start" });
-}
+function allerSemaineCourante() { semChoisie = null; renderProgramme(); }
 
 function renderTout() { renderAujourdhui(); renderProgramme(); if (reglId) renderRegl(); }
 
@@ -1318,7 +1368,7 @@ function show(name) {
   document.querySelectorAll("[data-go]").forEach(b => b.setAttribute("aria-selected", b.dataset.go === name));
   try { localStorage.setItem("tab", name); } catch (e) {}
   window.scrollTo(0, 0);
-  if (name === "programme") { renderProgramme(true); allerSemaineCourante(); } // ouvre sur la semaine en cours
+  if (name === "programme") allerSemaineCourante(); // ouvre sur la semaine en cours
 }
 document.addEventListener("click", e => {
   if (e.target.id === "voile") { fermerRegl(); return; }
@@ -1331,6 +1381,7 @@ document.addEventListener("click", e => {
   else if (d.regl) ouvrirRegl(d.regl);
   else if (d.fermer) fermerRegl();
   else if (d.adj) ajuster(d.adj, +d.d);
+  else if (d.sem) { semChoisie = +d.sem; renderProgramme(); }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") fermerRegl(); });
 
