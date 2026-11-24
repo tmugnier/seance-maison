@@ -358,6 +358,12 @@ nav button[aria-selected="true"] svg { animation: pop .3s ease-out; }
   <label class="bascule">Musique pendant l'effort <input type="checkbox" id="r-musique"></label>
   <button class="big" data-fermer="1">OK</button>
 </div>
+<!-- Détail d'une semaine du programme (appui sur une case) : s'ouvre par-dessus, sans bouger la page -->
+<div class="sheet" id="sh-sem" role="dialog" aria-modal="true" aria-label="Détail de la semaine" hidden>
+  <div class="poignee"></div>
+  <div id="sem-detail"></div>
+  <button class="big" data-fermer="1">OK</button>
+</div>
 <!-- Dégradés des silhouettes (relief des muscles) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <radialGradient id="g-muscle" cx="40%" cy="35%" r="75%"><stop offset="0" style="stop-color:var(--fig-clair)"/><stop offset="1" style="stop-color:var(--fig)"/></radialGradient>
@@ -994,7 +1000,12 @@ function ouvrirRegl(id) {
   document.getElementById("voile").hidden = false; document.getElementById("sh-regl").hidden = false;
   document.getElementById("sh-regl").scrollTop = 0;
 }
-function fermerRegl() { reglId = null; document.getElementById("voile").hidden = true; document.getElementById("sh-regl").hidden = true; }
+function fermerRegl() { reglId = null; document.getElementById("voile").hidden = true; document.getElementById("sh-regl").hidden = true; document.getElementById("sh-sem").hidden = true; }
+function ouvrirSemaine(n) {
+  const x = infosSemaines()[n - 1]; if (!x) return;
+  document.getElementById("sem-detail").innerHTML = detailSemaine(x);
+  document.getElementById("voile").hidden = false; document.getElementById("sh-sem").hidden = false;
+}
 function ajuster(key, d) {
   const a = act(reglId); if (!a) return;
   const k = cfg(a), lim = { effort: [10, 120, 5], recup: [0, 120, 5], tours: [1, 10, 1] }[key];
@@ -1076,7 +1087,7 @@ function renderProgramme() {
   const el = document.getElementById("prog-view"); if (!el) return;
   const infos = infosSemaines(), p = semainePlan(), cal = calendrierPlan(), total = PLAN_TRAIL.semaines.length;
   const courante = p.statut === "en cours" ? p.n : p.statut === "avant" ? 1 : total;
-  if (!semChoisie) semChoisie = courante;
+  semChoisie = courante; // la carte du haut montre toujours la semaine en cours
   const fin = cal.length ? plusJours(cal[cal.length - 1].lundi, 6) : null;
   const avance = p.statut === "fini" ? 1 : p.statut === "avant" ? 0 : (p.n - 1) / total;
   const C = 2 * Math.PI * 34;
@@ -1092,7 +1103,7 @@ function renderProgramme() {
     </div>
     <div id="p-detail">${detailSemaine(infos[semChoisie - 1])}</div>
     ${groupes.map(gr => `<div class="pg-t">${esc(gr.g)} · ${esc(nomPhase(gr.g))}</div><div class="pg">${gr.xs.map(x =>
-      `<button class="sq ${x.etatS}${legere(x.l) ? " lg" : ""}${x.n === semChoisie ? " sel" : ""}" data-sem="${x.n}" aria-label="Semaine ${x.n}"><small>S${x.n}</small><b>${esc(slCourt(x.l.sortieLongue).split(" · ")[0].replace(" km", ""))}</b></button>`).join("")}</div>`).join("")}`;
+      `<button class="sq ${x.etatS}${legere(x.l) ? " lg" : ""}" data-sem="${x.n}" aria-label="Semaine ${x.n}"><small>S${x.n}</small><b>${esc(slCourt(x.l.sortieLongue).split(" · ")[0].replace(" km", ""))}</b></button>`).join("")}</div>`).join("")}`;
 }
 function allerSemaineCourante() { semChoisie = null; renderProgramme(); }
 
@@ -1411,14 +1422,18 @@ T("timer").addEventListener("pointerdown", () => { try { audio && audio.state !=
 
 /* ---------- Navigation ---------- */
 const TABS = ["aujourdhui", "programme"];
+// Chaque onglet garde sa position de défilement : on retrouve la page là où on l'avait laissée
+const positions = {}; let ongletActif = null;
 function show(name) {
   if (!TABS.includes(name)) name = "aujourdhui";
   fermerRegl();
+  if (ongletActif) positions[ongletActif] = window.scrollY;
   document.querySelectorAll("[data-tab]").forEach(s => s.hidden = s.dataset.tab !== name);
   document.querySelectorAll("[data-go]").forEach(b => b.setAttribute("aria-selected", b.dataset.go === name));
   try { localStorage.setItem("tab", name); } catch (e) {}
-  window.scrollTo(0, 0);
   if (name === "programme") allerSemaineCourante(); else renderAujourdhui(); // l'onglet ouvert est redessiné à jour
+  if (name !== ongletActif) window.scrollTo(0, positions[name] || 0);
+  ongletActif = name;
 }
 document.addEventListener("click", e => {
   if (e.target.id === "voile") { fermerRegl(); return; }
@@ -1438,7 +1453,7 @@ document.addEventListener("click", e => {
   else if (d.regl) ouvrirRegl(d.regl);
   else if (d.fermer) fermerRegl();
   else if (d.adj) ajuster(d.adj, +d.d);
-  else if (d.sem) { semChoisie = +d.sem; renderProgramme(); }
+  else if (d.sem) ouvrirSemaine(+d.sem); // la page ne bouge pas
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") fermerRegl(); });
 // Feuille de réglages : on la descend du doigt pour la fermer (écouteurs passifs : le défilement reste fluide)
