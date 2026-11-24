@@ -294,14 +294,28 @@ nav button[aria-selected="true"] { color: var(--accent); }
 button { transition: transform .08s ease-out, opacity .08s; }
 button:active { transform: scale(.96); opacity: .85; }
 .rond:active, .play:active { transform: scale(.9); }
-.sheet:not([hidden]) { animation: monte .22s cubic-bezier(.2, .8, .3, 1); will-change: transform; }
-.voile:not([hidden]) { animation: fondu .2s ease-out; }
+/* Courbe « à la iOS » : démarre vite, se pose en douceur. Tout ne bouge que transform / opacity (GPU, aucune saccade) */
+:root { --doux: cubic-bezier(.32, .72, 0, 1); }
+.sheet:not([hidden]) { animation: monte .34s var(--doux); will-change: transform; }
+.voile:not([hidden]) { animation: fondu .26s ease-out; }
+.sheet.ferme { animation: descend .22s cubic-bezier(.4, 0, 1, 1) forwards; }
+.voile.ferme { animation: efface .22s ease-in forwards; }
 @keyframes monte { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes descend { from { transform: var(--depuis, none); } to { transform: translateY(100%); } }
 @keyframes fondu { from { opacity: 0; } to { opacity: 1; } }
+@keyframes efface { to { opacity: 0; } }
 .carte-liste, .pd { contain: content; }
-/* Changement d'onglet : le contenu arrive en douceur */
-main > section:not([hidden]) { animation: arrive .22s ease-out; }
-@keyframes arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* Changement d'onglet : un fondu léger */
+main > section:not([hidden]) { animation: arrive .2s var(--doux); }
+@keyframes arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* Timer : s'ouvre en fondu, se referme en fondu, couleurs de phase qui se fondent */
+#timer { transition: background-color .45s ease; }
+#timer:not([hidden]) { animation: ouvre .28s var(--doux); }
+#timer.ferme { animation: efface .2s ease-in forwards; }
+@keyframes ouvre { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+.t-mid.change { animation: phase .3s var(--doux); }
+@keyframes phase { from { opacity: .35; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.toast.part { animation: efface .2s ease-in forwards; }
 /* Séance cochée : la ligne glisse et s'efface avant de passer dans « Fait » */
 .ls-row.partant { animation: part .26s ease-in forwards; }
 @keyframes part { to { opacity: 0; transform: translateX(40px); } }
@@ -319,7 +333,7 @@ nav button[aria-selected="true"] svg { animation: pop .3s ease-out; }
 #timer[data-phase="rest"] .t-prog i { background: var(--rest); }
 .toast:not([hidden]) { animation: toastIn .22s cubic-bezier(.2, .8, .3, 1); }
 @keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } button, .sheet, .voile, .toast, main > section, .ls-row, nav svg, .t-prog i { transition: none !important; animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } button, .sheet, .voile, .toast, main > section, .ls-row, nav svg, .t-prog i, #timer, .t-mid { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
@@ -856,8 +870,15 @@ function ajouter(id, delta) {
 let toastTimer = null;
 function toast(txt) {
   const t = document.getElementById("toast");
-  t.textContent = txt; t.hidden = false;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  t.classList.remove("part"); t.textContent = txt; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => sortir(t, "part", () => { t.hidden = true; }), 2200);
+}
+// Fait disparaître un élément en douceur (classe d'animation), puis le cache. Sans animation si l'iPhone est réglé sur « réduire les animations ».
+const sansAnim = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+function sortir(el, classe, puis) {
+  if (sansAnim() || el.hidden) { el.classList.remove(classe); puis(); return; }
+  el.classList.add(classe);
+  setTimeout(() => { if (!el.classList.contains(classe)) return; el.classList.remove(classe); puis(); }, 210); // rouvert entre-temps : on ne cache pas
 }
 
 /* ---------- Accueil : la liste de la semaine ---------- */
@@ -997,15 +1018,25 @@ function renderRegl() {
   document.getElementById("r-voix").checked = voixOn;
   document.getElementById("r-musique").checked = ambiance.actif();
 }
+const rouvrir = (...ids) => ids.forEach(id => document.getElementById(id).classList.remove("ferme"));
 function ouvrirRegl(id) {
-  reglId = id; renderRegl();
+  reglId = id; renderRegl(); rouvrir("sh-regl", "voile");
   document.getElementById("voile").hidden = false; document.getElementById("sh-regl").hidden = false;
   document.getElementById("sh-regl").scrollTop = 0;
 }
-function fermerRegl() { reglId = null; document.getElementById("voile").hidden = true; document.getElementById("sh-regl").hidden = true; document.getElementById("sh-sem").hidden = true; }
+function fermerRegl() {
+  reglId = null;
+  const voile = document.getElementById("voile");
+  ["sh-regl", "sh-sem"].forEach(id => {
+    const sh = document.getElementById(id); if (sh.hidden) return;
+    sh.style.setProperty("--depuis", sh.style.transform || "none"); sh.style.transform = ""; // repart d'où le doigt l'a lâché
+    sortir(sh, "ferme", () => { sh.hidden = true; sh.style.removeProperty("--depuis"); });
+  });
+  sortir(voile, "ferme", () => { voile.hidden = true; });
+}
 function ouvrirSemaine(n) {
   const x = infosSemaines()[n - 1]; if (!x) return;
-  document.getElementById("sem-detail").innerHTML = detailSemaine(x);
+  document.getElementById("sem-detail").innerHTML = detailSemaine(x); rouvrir("sh-sem", "voile");
   document.getElementById("voile").hidden = false; document.getElementById("sh-sem").hidden = false;
 }
 function ajuster(key, d) {
@@ -1304,7 +1335,7 @@ function lancer(id) {
   const a = act(id); if (!a || a.type !== "circuit") return;
   debloquerSon(); debloquerVoix();
   run = { s: a, steps: etapes(a), i: 0, end: 0, left: 0, paused: false, debut: Date.now(), lastSec: null };
-  T("timer").hidden = false; T("t-confirm").hidden = true; T("t-btns").hidden = false;
+  T("timer").classList.remove("ferme"); T("timer").hidden = false; T("t-confirm").hidden = true; T("t-btns").hidden = false;
   garderEcran(); demarrerEtape();
 }
 function demarrerEtape() {
@@ -1335,6 +1366,7 @@ function demarrerEtape() {
   if (st.phase === "effort") [0, 220, 440].forEach(d => setTimeout(() => bip(2093, 0.18, 0.5), d));
   else if (st.phase === "rest") { bip(1319, 0.45, 0.5); setTimeout(() => bip(1047, 0.6, 0.5), 480); }
   T("t-pause").textContent = "Pause"; run.paused = false;
+  if (!sansAnim()) { const m = document.querySelector(".t-mid"); m.classList.remove("change"); void m.offsetWidth; m.classList.add("change"); } // nouvelle étape : léger fondu
   progEtape(true);
   tick();
 }
@@ -1380,7 +1412,7 @@ function finir() {
 function fermer() {
   if (run) cancelAnimationFrame(run.raf);
   couperMuet(); ambiance.stop(); montrerPhoto(null); if (!(run && run.fini)) taire();
-  run = null; T("timer").hidden = true; T("t-cancel").hidden = false; T("t-quit").textContent = "Quitter la séance";
+  run = null; sortir(T("timer"), "ferme", () => { T("timer").hidden = true; T("t-cancel").hidden = false; T("t-quit").textContent = "Quitter la séance"; });
   try { wake && wake.release(); } catch (e) {} wake = null;
 }
 T("t-pause").onclick = () => {
@@ -1469,7 +1501,7 @@ document.querySelectorAll(".sheet").forEach(sh => {
   const fin = () => {
     if (y0 === null) return; y0 = null; sh.classList.remove("glisse");
     const rapide = dy > 30 && dy / Math.max(1, Date.now() - t0) > 0.5; // petit coup de doigt rapide vers le bas
-    if (dy > 90 || rapide) { sh.style.transform = ""; fermerRegl(); return; }
+    if (dy > 90 || rapide) { fermerRegl(); return; } // le volet continue sa course depuis la position du doigt
     sh.classList.add("retour"); sh.style.transform = ""; setTimeout(() => sh.classList.remove("retour"), 220);
   };
   if (poignee) { // pointer events : marche au doigt sur iPhone comme à la souris
