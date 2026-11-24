@@ -160,12 +160,12 @@ ol.exos p { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
 .fig .p { fill: var(--fig-peau); stroke: var(--fig-trait); stroke-width: .5; }
 .fig .on { fill: url(#g-actif); opacity: 1; }
 details.autres { margin-top: 16px; }
-details.autres summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: .9rem; padding: 6px 0 10px; list-style: none; }
+details.autres summary { -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; color: var(--muted); font-weight: 600; font-size: .9rem; padding: 6px 0 10px; list-style: none; }
 details.autres summary::-webkit-details-marker { display: none; }
 details.autres summary::after { content: " ›"; }
 details.autres[open] summary::after { content: " ⌄"; }
 .voile { position: fixed; inset: 0; z-index: 25; background: rgba(6, 7, 12, .5); cursor: pointer; } /* sans « cursor: pointer », Safari iPhone ignore l'appui sur le fond */
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; max-width: 560px; margin: 0 auto; max-height: 90vh; overflow-y: auto; background: var(--surface);
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; max-width: 560px; margin: 0 auto; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; background: var(--surface);
   border-radius: 24px 24px 0 0; padding: 10px max(18px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); box-shadow: 0 -12px 40px rgba(0, 0, 0, .25); }
 /* Poignée : une large zone (toute la largeur) qu'on attrape du doigt pour descendre le volet */
 .poignee { width: 100%; height: 30px; margin: -10px 0 6px; display: flex; justify-content: center; align-items: center; touch-action: none; cursor: grab; }
@@ -346,8 +346,7 @@ nav button[aria-selected="true"] svg { animation: pop .3s ease-out; }
     <div class="carte-liste" id="a-faire"></div>
     <div class="label" id="l-fait" hidden>Fait</div>
     <div class="carte-liste" id="faits" hidden></div>
-    <div class="label" id="l-autres" hidden>Hors programme cette semaine</div>
-    <div class="carte-liste" id="autres" hidden></div>
+    <details class="autres" id="autres-wrap" hidden><summary>Autres séances</summary><div class="carte-liste" id="autres"></div></details>
   </section>
 
   <section data-tab="programme" hidden>
@@ -984,7 +983,7 @@ function renderAujourdhui() {
   document.getElementById("faits").innerHTML = faits.map(ligne).join("");
   document.getElementById("l-fait").hidden = document.getElementById("faits").hidden = !faits.length;
   document.getElementById("autres").innerHTML = autres.map(ligne).join("");
-  document.getElementById("l-autres").hidden = document.getElementById("autres").hidden = !autres.length;
+  document.getElementById("autres-wrap").hidden = !autres.length;
 }
 
 /* « −1 » et « Retirer » : confirmation en deux appuis */
@@ -1020,7 +1019,15 @@ function renderRegl() {
   document.getElementById("r-voix").checked = voixOn;
   document.getElementById("r-musique").checked = ambiance.actif();
 }
-const rouvrir = (...ids) => ids.forEach(id => document.getElementById(id).classList.remove("ferme"));
+const rouvrir = (...ids) => { ids.forEach(id => document.getElementById(id).classList.remove("ferme")); bloquerFond(true); };
+// Volet ouvert : la page derrière ne défile plus (méthode qui marche sur iPhone : on fige le body à sa position)
+let fondBloque = false, yFond = 0;
+function bloquerFond(oui) {
+  if (oui === fondBloque) return; fondBloque = oui;
+  const b = document.body;
+  if (oui) { yFond = window.scrollY; Object.assign(b.style, { position: "fixed", top: -yFond + "px", left: "0", right: "0", width: "100%" }); }
+  else { Object.assign(b.style, { position: "", top: "", left: "", right: "", width: "" }); window.scrollTo(0, yFond); }
+}
 function ouvrirRegl(id) {
   reglId = id; renderRegl(); rouvrir("sh-regl", "voile");
   document.getElementById("voile").hidden = false; document.getElementById("sh-regl").hidden = false;
@@ -1035,6 +1042,7 @@ function fermerRegl() {
     sortir(sh, "ferme", () => { sh.hidden = true; sh.style.removeProperty("--depuis"); });
   });
   sortir(voile, "ferme", () => { voile.hidden = true; });
+  bloquerFond(false);
 }
 function ouvrirSemaine(n) {
   const x = infosSemaines()[n - 1]; if (!x) return;
