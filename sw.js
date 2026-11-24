@@ -1,5 +1,5 @@
 /* Service worker : l'appli s'ouvre même hors ligne. Jamais de cache pour Supabase. */
-const CACHE = "seance-v22";
+const CACHE = "seance-v23";
 const CACHE_PHOTOS = "seance-photos-v1"; // gardé d'une version à l'autre ; changer CACHE_PHOTOS (v2…) quand une photo change
 const FICHIERS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
@@ -18,16 +18,26 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname.endsWith("supabase.co")) return; // toujours le réseau, jamais en cache
-  if (url.origin !== location.origin) return;       // polices etc. : comportement normal du navigateur
 
-  // Page : réseau d'abord, cache en secours
+  // Polices Google : gardées en cache (l'app s'affiche tout de suite avec la bonne police, même sans réseau)
+  if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
+    e.respondWith(caches.open(CACHE_PHOTOS).then(c => c.match(req).then(r => r || fetch(req).then(rep => {
+      if (rep.ok || rep.type === "opaque") e.waitUntil(c.put(req, rep.clone()));
+      return rep;
+    }))));
+    return;
+  }
+  if (url.origin !== location.origin) return;
+
+  // Page : réseau d'abord pour avoir la dernière version, mais si le réseau traîne plus de 2,5 s, on ouvre la version en cache
   if (req.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("index.html")) {
-    e.respondWith(
-      fetch(req, { cache: "no-store" }).then(r => { // toujours la dernière version, sans cache navigateur
-        if (r.ok) { const copie = r.clone(); caches.open(CACHE).then(c => c.put("index.html", copie)); }
-        return r;
-      }).catch(() => caches.match("index.html").then(r => r || caches.match("./")))
-    );
+    const reseau = fetch(req, { cache: "no-store" }).then(r => {
+      if (r.ok) { const copie = r.clone(); e.waitUntil(caches.open(CACHE).then(c => c.put("index.html", copie))); }
+      return r;
+    });
+    const enCache = () => caches.match("index.html").then(r => r || caches.match("./"));
+    const delai = new Promise(ok => setTimeout(ok, 2500)).then(enCache);
+    e.respondWith(Promise.race([reseau.catch(enCache), delai.then(r => r || reseau)]).then(r => r || reseau));
     return;
   }
 

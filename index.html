@@ -288,7 +288,36 @@ nav button[aria-selected="true"] { color: var(--accent); }
 .t-confirm { display: flex; gap: 10px; }
 .t-confirm button { flex: 1; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 16px; padding: 16px 8px; font-weight: 600; font-size: 1rem; }
 .t-confirm #t-quit { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+/* Réactivité au toucher : retour visuel immédiat, animations sur le GPU uniquement (transform / opacity) */
+button { transition: transform .08s ease-out, opacity .08s; }
+button:active { transform: scale(.96); opacity: .85; }
+.rond:active, .play:active { transform: scale(.9); }
+.sheet:not([hidden]) { animation: monte .22s cubic-bezier(.2, .8, .3, 1); will-change: transform; }
+.voile:not([hidden]) { animation: fondu .2s ease-out; }
+@keyframes monte { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes fondu { from { opacity: 0; } to { opacity: 1; } }
+.carte-liste, .pd, .pg { contain: content; }
+/* Changement d'onglet : le contenu arrive en douceur */
+main > section:not([hidden]) { animation: arrive .22s ease-out; }
+@keyframes arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* Séance cochée : la ligne glisse et s'efface avant de passer dans « Fait » */
+.ls-row.partant { animation: part .26s ease-in forwards; }
+@keyframes part { to { opacity: 0; transform: translateX(40px); } }
+.rond.coche { animation: pop .26s ease-out; background: var(--rest); }
+@keyframes pop { 50% { transform: scale(1.18); } }
+/* Onglet actif : petite impulsion de l'icône */
+nav button[aria-selected="true"] svg { animation: pop .3s ease-out; }
+/* Feuille : on peut la descendre du doigt pour la fermer */
+.sheet.glisse { animation: none; transition: none; }
+.sheet.retour { transition: transform .2s ease-out; }
+/* Barre de progression de l'étape du timer (fluide, seconde par seconde) */
+.t-prog { width: min(260px, 70%); height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; margin: 6px auto 0; }
+.t-prog i { display: block; height: 100%; width: 0; background: var(--fg); border-radius: 3px; }
+#timer[data-phase="effort"] .t-prog i { background: var(--accent); }
+#timer[data-phase="rest"] .t-prog i { background: var(--rest); }
+.toast:not([hidden]) { animation: toastIn .22s cubic-bezier(.2, .8, .3, 1); }
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } button, .sheet, .voile, .toast, main > section, .ls-row, nav svg, .t-prog i { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
@@ -342,6 +371,7 @@ nav button[aria-selected="true"] { color: var(--accent); }
     <p class="t-name" id="t-name">Pompes classiques</p>
     <img class="t-photo" id="t-photo" alt="" loading="lazy" hidden>
     <div class="t-time" id="t-time">5</div>
+    <div class="t-prog" aria-hidden="true"><i id="t-prog"></i></div>
     <div class="t-next" id="t-next"></div>
   </div>
   <div class="t-btns" id="t-btns">
@@ -856,7 +886,12 @@ const CORPS = {
     ["mollets", "M37.4,150 C35.4,158 36,166 39,172.4 C42,174.4 45,172.6 46.2,166.4 C47,160 46.2,154 44.2,150 Z"]
   ]
 };
+const _silCache = {};
 function silhouette(vue, muscles, cadre) {
+  const cle = vue + "|" + muscles.join(",") + "|" + (cadre || "");
+  return _silCache[cle] || (_silCache[cle] = dessinerSilhouette(vue, muscles, cadre)); // dessinée une seule fois
+}
+function dessinerSilhouette(vue, muscles, cadre) {
   const on = new Set(muscles);
   const moitie = `<path class="p" d="${CORPS_BASE}"/>` + CORPS[vue].map(([g, d]) =>
     `<path class="m${g === "avantbras" || g === "lombaires" ? " doux" : ""}${on.has(g) ? " on" : ""}" d="${d}"/>`).join("");
@@ -1061,7 +1096,12 @@ function renderProgramme() {
 }
 function allerSemaineCourante() { semChoisie = null; renderProgramme(); }
 
-function renderTout() { renderAujourdhui(); renderProgramme(); if (reglId) renderRegl(); }
+// On ne redessine que ce qui est visible (le Programme est redessiné à l'ouverture de son onglet)
+function renderTout() {
+  const prog = document.querySelector('[data-tab="programme"]');
+  if (prog && !prog.hidden) renderProgramme(); else renderAujourdhui();
+  if (reglId) renderRegl();
+}
 
 /* ---------- Son ---------- */
 let audio = null;
@@ -1282,7 +1322,17 @@ function demarrerEtape() {
   if (st.phase === "effort") [0, 220, 440].forEach(d => setTimeout(() => bip(2093, 0.18, 0.5), d));
   else if (st.phase === "rest") { bip(1319, 0.45, 0.5); setTimeout(() => bip(1047, 0.6, 0.5), 480); }
   T("t-pause").textContent = "Pause"; run.paused = false;
+  progEtape(true);
   tick();
+}
+// Barre de l'étape : se remplit en continu jusqu'à la fin de l'étape (une seule transition CSS, pas de calcul à chaque image)
+function progEtape(depart) {
+  const b = T("t-prog"); if (!b || !run) return;
+  const st = run.steps[run.i], total = st.sec * 1000, reste = run.paused ? run.left : run.end - performance.now();
+  b.style.transition = "none"; b.style.width = (100 * (1 - Math.max(0, reste) / total)).toFixed(2) + "%";
+  if (run.paused) return;
+  void b.offsetWidth; // applique la position de départ avant de lancer la transition
+  b.style.transition = `width ${Math.max(0, reste) / 1000}s linear`; b.style.width = "100%";
 }
 function tick() {
   if (!run || run.paused) return;
@@ -1322,8 +1372,8 @@ function fermer() {
 }
 T("t-pause").onclick = () => {
   if (!run) return;
-  if (run.paused) { run.end = performance.now() + run.left; run.paused = false; T("t-pause").textContent = "Pause"; tick(); }
-  else { run.left = run.end - performance.now(); run.paused = true; cancelAnimationFrame(run.raf); T("t-pause").textContent = "Reprendre"; }
+  if (run.paused) { run.end = performance.now() + run.left; run.paused = false; T("t-pause").textContent = "Pause"; progEtape(); tick(); }
+  else { run.left = run.end - performance.now(); run.paused = true; cancelAnimationFrame(run.raf); T("t-pause").textContent = "Reprendre"; progEtape(); }
 };
 T("t-skip").onclick = () => run && suivant();
 /* Revenir : recommence l'étape en cours ; si on vient juste de la commencer (moins de 3 s), revient à l'exercice d'avant */
@@ -1368,7 +1418,7 @@ function show(name) {
   document.querySelectorAll("[data-go]").forEach(b => b.setAttribute("aria-selected", b.dataset.go === name));
   try { localStorage.setItem("tab", name); } catch (e) {}
   window.scrollTo(0, 0);
-  if (name === "programme") allerSemaineCourante(); // ouvre sur la semaine en cours
+  if (name === "programme") allerSemaineCourante(); else renderAujourdhui(); // l'onglet ouvert est redessiné à jour
 }
 document.addEventListener("click", e => {
   if (e.target.id === "voile") { fermerRegl(); return; }
@@ -1376,7 +1426,14 @@ document.addEventListener("click", e => {
   const d = b.dataset;
   if (d.go) show(d.go);
   else if (d.start) { fermerRegl(); lancer(d.start); }
-  else if (d.done) { decalage = 0; ajouter(d.done, 1); }
+  else if (d.done) { // petit « pop » vert, la ligne glisse, puis la liste se met à jour
+    decalage = 0; const ligneEl = b.closest(".ls-row"), id = d.done;
+    if (ligneEl && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      b.classList.add("coche"); b.disabled = true;
+      setTimeout(() => ligneEl.classList.add("partant"), 140);
+      setTimeout(() => ajouter(id, 1), 400);
+    } else ajouter(id, 1);
+  }
   else if (d.del || d.moins) retirer(b);
   else if (d.regl) ouvrirRegl(d.regl);
   else if (d.fermer) fermerRegl();
@@ -1384,10 +1441,21 @@ document.addEventListener("click", e => {
   else if (d.sem) { semChoisie = +d.sem; renderProgramme(); }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") fermerRegl(); });
+// Feuille de réglages : on la descend du doigt pour la fermer (écouteurs passifs : le défilement reste fluide)
+(() => {
+  const sh = document.getElementById("sh-regl"); let y0 = null, dy = 0;
+  sh.addEventListener("touchstart", e => { if (sh.scrollTop > 0) return; y0 = e.touches[0].clientY; dy = 0; sh.classList.add("glisse"); }, { passive: true });
+  sh.addEventListener("touchmove", e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = dy ? `translateY(${dy}px)` : ""; }, { passive: true });
+  sh.addEventListener("touchend", () => {
+    if (y0 === null) return; y0 = null; sh.classList.remove("glisse");
+    if (dy > 90) { sh.style.transform = ""; fermerRegl(); return; }
+    sh.classList.add("retour"); sh.style.transform = ""; setTimeout(() => sh.classList.remove("retour"), 220);
+  }, { passive: true });
+})();
 
 // Pas de zoom à deux doigts (iPhone)
 ["gesturestart", "gesturechange", "gestureend"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
-["touchstart", "touchmove"].forEach(ev => document.addEventListener(ev, e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false }));
+// (plus d'écouteur touchstart/touchmove bloquant : il forçait iOS à attendre le script avant chaque défilement)
 let dernierTap = 0; // pas de zoom au double-tap
 document.addEventListener("touchend", e => {
   const t = Date.now();
