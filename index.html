@@ -217,7 +217,7 @@ details.autres[open] summary::after { content: " ⌄"; }
 .sq.ko { opacity: .55; }
 .sq.encours { background: var(--accent); border-color: var(--accent); }
 .sq.encours b, .sq.encours small { color: var(--on-color); }
-.sq.sel { outline: 2px solid var(--fg); outline-offset: 2px; }
+.sq.sel { box-shadow: inset 0 0 0 2px var(--fg); } /* anneau à l'intérieur de la case : jamais coupé */
 /* (ancien) Programme : frise */
 .pilote { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .pilote .ghost { padding: 12px 14px; text-align: left; display: flex; flex-direction: column; gap: 2px; }
@@ -296,7 +296,7 @@ button:active { transform: scale(.96); opacity: .85; }
 .voile:not([hidden]) { animation: fondu .2s ease-out; }
 @keyframes monte { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes fondu { from { opacity: 0; } to { opacity: 1; } }
-.carte-liste, .pd, .pg { contain: content; }
+.carte-liste, .pd { contain: content; }
 /* Changement d'onglet : le contenu arrive en douceur */
 main > section:not([hidden]) { animation: arrive .22s ease-out; }
 @keyframes arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
