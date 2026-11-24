@@ -1,5 +1,5 @@
 /* Service worker : l'appli s'ouvre même hors ligne. Jamais de cache pour Supabase. */
-const CACHE = "seance-v26";
+const CACHE = "seance-v27";
 const CACHE_PHOTOS = "seance-photos-v1"; // gardé d'une version à l'autre ; changer CACHE_PHOTOS (v2…) quand une photo change
 const FICHIERS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
