@@ -292,8 +292,9 @@ nav button[aria-selected="true"] { color: var(--accent); }
 .t-confirm #t-quit { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 /* Réactivité au toucher : retour visuel immédiat, animations sur le GPU uniquement (transform / opacity) */
 button { transition: transform .08s ease-out, opacity .08s; }
-button:active { transform: scale(.96); opacity: .85; }
-.rond:active, .play:active { transform: scale(.9); }
+button:active { opacity: .6; } /* retour visuel sans faire bouger le bouton sous le doigt */
+/* Un élément en train de disparaître ne doit jamais bloquer les appuis */
+.voile.ferme, .sheet.ferme, #timer.ferme, .toast { pointer-events: none; }
 /* Courbe « à la iOS » : démarre vite, se pose en douceur. Tout ne bouge que transform / opacity (GPU, aucune saccade) */
 :root { --doux: cubic-bezier(.32, .72, 0, 1); }
 .sheet:not([hidden]) { animation: monte .34s var(--doux); will-change: transform; }
@@ -345,7 +346,8 @@ nav button[aria-selected="true"] svg { animation: pop .3s ease-out; }
     <div class="carte-liste" id="a-faire"></div>
     <div class="label" id="l-fait" hidden>Fait</div>
     <div class="carte-liste" id="faits" hidden></div>
-    <details class="autres" id="autres-wrap" hidden><summary>Autres séances</summary><div class="carte-liste" id="autres"></div></details>
+    <div class="label" id="l-autres" hidden>Hors programme cette semaine</div>
+    <div class="carte-liste" id="autres" hidden></div>
   </section>
 
   <section data-tab="programme" hidden>
@@ -982,7 +984,7 @@ function renderAujourdhui() {
   document.getElementById("faits").innerHTML = faits.map(ligne).join("");
   document.getElementById("l-fait").hidden = document.getElementById("faits").hidden = !faits.length;
   document.getElementById("autres").innerHTML = autres.map(ligne).join("");
-  document.getElementById("autres-wrap").hidden = !autres.length;
+  document.getElementById("l-autres").hidden = document.getElementById("autres").hidden = !autres.length;
 }
 
 /* « −1 » et « Retirer » : confirmation en deux appuis */
@@ -1511,20 +1513,13 @@ document.querySelectorAll(".sheet").forEach(sh => {
     poignee.addEventListener("pointercancel", fin);
     poignee.addEventListener("touchstart", e => e.stopPropagation(), { passive: true }); // le geste de la poignée n'est pas compté deux fois
   }
-  sh.addEventListener("touchstart", e => { if (sh.scrollTop <= 0 && !e.target.closest(".poignee")) debut(e); }, { passive: true });
-  sh.addEventListener("touchmove", bouge, { passive: true });
-  sh.addEventListener("touchend", fin, { passive: true });
+  // (le reste du volet ne réagit plus au glissement : les boutons à l'intérieur restent faciles à toucher)
 });
 
 // Pas de zoom à deux doigts (iPhone)
 ["gesturestart", "gesturechange", "gestureend"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 // (plus d'écouteur touchstart/touchmove bloquant : il forçait iOS à attendre le script avant chaque défilement)
-let dernierTap = 0; // pas de zoom au double-tap
-document.addEventListener("touchend", e => {
-  const t = Date.now();
-  if (t - dernierTap < 350 && !e.target.closest("button")) e.preventDefault();
-  dernierTap = t;
-}, { passive: false });
+// (plus d'écouteur touchend bloquant : il annulait des appuis rapides sur iPhone. Le zoom au double-tap est bloqué en CSS : touch-action)
 
 /* Sauvegarde en ligne : connexion au démarrage, puis resynchronisation quand l'app revient au premier plan
    ou que le réseau revient (réessaie aussi une app démarrée hors ligne). */
