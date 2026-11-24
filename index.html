@@ -1463,20 +1463,23 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") fermerRegl()
 document.querySelectorAll(".sheet").forEach(sh => {
   const poignee = sh.querySelector(".poignee");
   let y0 = null, dy = 0, t0 = 0;
-  const debut = e => { y0 = e.touches[0].clientY; dy = 0; t0 = Date.now(); sh.classList.add("glisse"); };
-  const bouge = e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = dy ? `translateY(${dy}px)` : ""; };
+  const yDe = e => e.touches ? e.touches[0].clientY : e.clientY; // doigt (touch) ou souris / doigt (pointer)
+  const debut = e => { y0 = yDe(e); dy = 0; t0 = Date.now(); sh.classList.add("glisse"); };
+  const bouge = e => { if (y0 === null) return; dy = Math.max(0, yDe(e) - y0); sh.style.transform = dy ? `translateY(${dy}px)` : ""; };
   const fin = () => {
     if (y0 === null) return; y0 = null; sh.classList.remove("glisse");
     const rapide = dy > 30 && dy / Math.max(1, Date.now() - t0) > 0.5; // petit coup de doigt rapide vers le bas
     if (dy > 90 || rapide) { sh.style.transform = ""; fermerRegl(); return; }
     sh.classList.add("retour"); sh.style.transform = ""; setTimeout(() => sh.classList.remove("retour"), 220);
   };
-  if (poignee) {
-    poignee.addEventListener("touchstart", e => { e.stopPropagation(); debut(e); }, { passive: true });
-    poignee.addEventListener("touchmove", e => { e.preventDefault(); e.stopPropagation(); bouge(e); }, { passive: false });
-    poignee.addEventListener("touchend", e => { e.stopPropagation(); fin(); });
+  if (poignee) { // pointer events : marche au doigt sur iPhone comme à la souris
+    poignee.addEventListener("pointerdown", e => { e.preventDefault(); poignee.setPointerCapture(e.pointerId); debut(e); });
+    poignee.addEventListener("pointermove", bouge);
+    poignee.addEventListener("pointerup", fin);
+    poignee.addEventListener("pointercancel", fin);
+    poignee.addEventListener("touchstart", e => e.stopPropagation(), { passive: true }); // le geste de la poignée n'est pas compté deux fois
   }
-  sh.addEventListener("touchstart", e => { if (sh.scrollTop <= 0) debut(e); }, { passive: true });
+  sh.addEventListener("touchstart", e => { if (sh.scrollTop <= 0 && !e.target.closest(".poignee")) debut(e); }, { passive: true });
   sh.addEventListener("touchmove", bouge, { passive: true });
   sh.addEventListener("touchend", fin, { passive: true });
 });
