@@ -165,7 +165,7 @@ details.autres summary::-webkit-details-marker { display: none; }
 details.autres summary::after { content: " ›"; }
 details.autres[open] summary::after { content: " ⌄"; }
 .voile { position: fixed; inset: 0; z-index: 25; background: rgba(6, 7, 12, .5); cursor: pointer; } /* sans « cursor: pointer », Safari iPhone ignore l'appui sur le fond */
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; max-width: 560px; margin: 0 auto; max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; background: var(--surface);
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 26; max-width: 560px; margin: 0 auto; max-height: 94vh; max-height: 94dvh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; background: var(--surface);
   border-radius: 24px 24px 0 0; padding: 10px max(18px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); box-shadow: 0 -12px 40px rgba(0, 0, 0, .25); }
 /* Poignée : une large zone (toute la largeur) qu'on attrape du doigt pour descendre le volet */
 .poignee { width: 100%; height: 30px; margin: -10px 0 6px; display: flex; justify-content: center; align-items: center; touch-action: none; cursor: grab; }
@@ -173,7 +173,12 @@ details.autres[open] summary::after { content: " ⌄"; }
 .sheet h2 { font: 800 1.6rem/1.1 var(--display); }
 .duo-fig { display: flex; justify-content: center; gap: 18px; margin: 10px 0 12px; }
 .duo-fig figure { margin: 0; text-align: center; }
-.duo-fig svg { width: 104px; height: 180px; }
+.duo-fig svg { width: 76px; height: 132px; }
+.sheet .bascule { padding: 9px 0; }
+.sheet .big { margin-top: 14px; }
+.sheet .label { margin: 14px 0 4px; }
+.sheet .total { margin: 6px 0 0; }
+.sheet::-webkit-scrollbar { display: none; } /* pas de barre de défilement dans les volets : tout tient à l'écran */
 .duo-fig figcaption { font-size: .7rem; color: var(--muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .bascule { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-weight: 600; }
 .bascule input { appearance: none; -webkit-appearance: none; width: 50px; height: 30px; border-radius: 15px; background: var(--line); position: relative; cursor: pointer; margin: 0; flex: none; }
