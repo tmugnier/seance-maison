@@ -289,6 +289,7 @@ nav button[aria-selected="true"] { color: var(--accent); }
   <div class="label">Pendant la séance</div>
   <label class="bascule">Bips <input type="checkbox" id="r-bips"></label>
   <label class="bascule">Voix qui annonce les exercices <input type="checkbox" id="r-voix"></label>
+  <label class="bascule">Musique pendant l'effort <input type="checkbox" id="r-musique"></label>
   <button class="big" data-fermer="1">OK</button>
 </div>
 <!-- Dégradés des silhouettes (relief des muscles) -->
@@ -914,6 +915,7 @@ function renderRegl() {
   document.getElementById("r-total").textContent = "Durée : " + fmt(dureeSec(a));
   document.getElementById("r-bips").checked = bipsOn;
   document.getElementById("r-voix").checked = voixOn;
+  document.getElementById("r-musique").checked = ambiance.actif();
 }
 function ouvrirRegl(id) {
   reglId = id; renderRegl();
@@ -1207,7 +1209,7 @@ function demarrerEtape() {
   run.end = performance.now() + st.sec * 1000; run.lastSec = null;
   const s = run.s, c = cfg(s), ex = s.exos[st.ex];
   T("timer").dataset.phase = st.phase;
-  ambiance.stop(); // plus de musique générée : Tom écoute la sienne
+  if (st.phase === "effort") ambiance.jouer("effort"); else ambiance.stop(); // musique pendant l'effort, silence en récup
   T("t-seance").textContent = s.nom;
   T("t-round").textContent = "Tour " + st.tour + "/" + c.tours + " · Exo " + (st.ex + 1) + "/" + s.exos.length;
   T("t-phase").textContent = st.phase === "effort" ? "EFFORT" : st.phase === "rest" ? "RÉCUP" : st.phase === "warm" ? "ÉCHAUFFEMENT" : "PRÉPARE-TOI";
@@ -1295,6 +1297,9 @@ T("r-bips").addEventListener("change", e => {
   bipsOn = e.target.checked;
   try { localStorage.setItem("bips", bipsOn ? "on" : "off"); } catch (err) {}
   if (bipsOn) bip(2093, 0.18, 0.5);
+});
+T("r-musique").addEventListener("change", e => {
+  if (e.target.checked !== ambiance.actif()) ambiance.basculer();
 });
 T("r-voix").addEventListener("change", e => {
   voixOn = e.target.checked;
